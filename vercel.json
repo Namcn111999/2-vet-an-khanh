@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/((?!api/|assets/|images/|favicon|robots.txt|sitemap.xml|og-image.jpg).*)", "destination": "/index.html" }
+  ]
+}

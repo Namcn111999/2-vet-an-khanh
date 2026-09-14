@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ===== SEO cơ bản – chỉnh lại khi có domain thật ===== -->
+    <title>2Vet An Khánh – Phòng khám thú y uy tín tại Tây Mỗ, Hà Nội</title>
+    <meta
+      name="description"
+      content="2Vet An Khánh – bệnh viện thú y tại 29 Lô A20 KĐT Geleximco A, Tây Mỗ, Hà Nội. Khám & điều trị bệnh, tiêm phòng, grooming cho chó mèo. Đặt lịch nhanh qua tin nhắn hoặc gọi hotline 096 34 18126."
+    />
+    <meta
+      name="keywords"
+      content="phòng khám thú y Tây Mỗ, bệnh viện thú y Geleximco, khám thú y An Khánh, tiêm phòng chó mèo Tây Mỗ, grooming thú cưng Tây Mỗ, thú y gần đây"
+    />
+    <link rel="canonical" href="https://2vetankhanh.vn/" />
+
+    <!-- ===== Open Graph / chia sẻ mạng xã hội ===== -->
+    <meta property="og:type" content="business.business" />
+    <meta property="og:site_name" content="2Vet An Khánh" />
+    <meta property="og:title" content="2Vet An Khánh – Phòng khám thú y uy tín tại Tây Mỗ, Hà Nội" />
+    <meta
+      property="og:description"
+      content="Khám & điều trị bệnh, tiêm phòng, grooming cho chó mèo. Đặt lịch nhanh, đội ngũ bác sĩ tận tâm."
+    />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:url" content="https://2vetankhanh.vn/" />
+    <meta property="og:locale" content="vi_VN" />
+
+    <!-- ===== Favicon – dùng đúng logo thật (icon chó mèo) ===== -->
+    <link rel="icon" href="/favicon.png" type="image/png" />
+
+    <!-- ===== Font: Literata (headline, variable optical-size) + Inter (body), hỗ trợ tiếng Việt ===== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,300..900&family=Literata:ital,opsz,wght@1,7..72,400..700&family=Inter:wght@400;500;600;700&display=swap&subset=vietnamese"
+      rel="stylesheet"
+    />
+
+    <!-- =====================================================================
+         TODO – GẮN CÔNG CỤ ĐO LƯỜNG KHI CÓ THÔNG TIN THẬT
+         (xem chi tiết trong README.md, mục "Trang Admin Dashboard")
+         ===================================================================== -->
+
+    <!-- Umami Analytics — tự lấy VITE_UMAMI_WEBSITE_ID từ file .env, không cần sửa dòng này -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="%VITE_UMAMI_WEBSITE_ID%"></script>
+
+    <!-- TODO Facebook Pixel: dán snippet chuẩn của Meta, thay YOUR_PIXEL_ID -->
+    <!-- TODO Google Search Console: thêm thẻ xác minh khi đăng ký -->
+
+    <!-- ===== Dữ liệu có cấu trúc (Schema.org) – giúp Google hiểu đây là phòng khám thú y địa phương ===== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VeterinaryCare",
+        "name": "2Vet An Khánh",
+        "image": "https://2vetankhanh.vn/og-image.jpg",
+        "description": "Bệnh viện thú y tại 29 Lô A20 KĐT Geleximco A, Tây Mỗ, Hà Nội – khám & điều trị bệnh, tiêm phòng, grooming cho chó mèo.",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "29 Lô A20 KĐT Geleximco A, Tây Mỗ",
+          "addressLocality": "Hà Nội",
+          "addressRegion": "Hà Nội",
+          "addressCountry": "VN"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 21.0058704,
+          "longitude": 105.7332833
+        },
+        "hasMap": "https://www.google.com/maps/place/B%E1%BB%87nh+vi%E1%BB%87n+th%C3%BA+y+2Vet+An+Kh%C3%A1nh/@21.0058754,105.7307084,17z/data=!3m1!4b1!4m6!3m5!1s0x3134534856d051a7:0x3dae2d9f362187f9!8m2!3d21.0058704!4d105.7332833!16s%2Fg%2F11mkff4l35",
+        "telephone": "096 34 18126",
+        "openingHours": ["Mo-Su 08:00-12:00", "Mo-Su 14:00-19:00"],
+        "priceRange": "$$"
+      }
+    </script>
+  </head>
+  <body class="bg-paper text-ink font-body antialiased">
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  font-feature-settings: "kern" 1;
+}
+
+.font-display {
+  font-optical-sizing: auto;
+}
+
+.kicker {
+  @apply inline-flex items-center gap-2 text-[0.95rem] italic text-clay-dark/80;
+  font-family: "Literata", serif;
+  font-weight: 500;
+}
+.kicker::before {
+  content: "";
+  @apply w-2 h-2 rounded-full bg-amber inline-block not-italic;
+}
+
+.section-title {
+  @apply font-display text-3xl md:text-[2.5rem] leading-[1.12] text-ink;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.hero-title {
+  @apply font-display leading-[1.05];
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.stat-number {
+  font-family: "Literata", serif;
+  font-weight: 600;
+  font-style: italic;
+  font-optical-sizing: auto;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber-dark text-ink font-semibold
+    px-6 py-3 rounded-full transition-colors duration-200 focus-visible:outline focus-visible:outline-2
+    focus-visible:outline-offset-2 focus-visible:outline-clay;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 border border-ink/20 hover:border-ink/40 text-ink font-semibold
+    px-6 py-3 rounded-full transition-colors duration-200 focus-visible:outline focus-visible:outline-2
+    focus-visible:outline-offset-2 focus-visible:outline-clay;
+}
+
+/* ===== Hiệu ứng khi cuộn trang (scroll reveal) ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
