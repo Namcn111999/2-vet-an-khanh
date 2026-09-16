@@ -9,7 +9,11 @@
       <div v-for="(doc, i) in doctors" :key="doc.name" v-reveal="{ delay: i * 100 }">
         <div class="relative w-fit mx-auto">
           <div class="absolute -inset-1.5 rounded-full border-2 border-amber/40"></div>
-          <PlaceholderImg :label="doc.imgLabel" aspect="aspect-square" rounded="rounded-full" class="max-w-[180px]" />
+          <img
+            :src="doc.img"
+            :alt="`${doc.name} – ${doc.role} tại 2Vet An Khánh`"
+            class="w-[180px] h-[180px] rounded-full object-cover"
+          />
         </div>
         <div class="text-center mt-5">
           <h3 class="font-display text-xl text-ink" style="font-weight: 600">{{ doc.name }}</h3>
@@ -22,11 +26,24 @@
 </template>
 
 <script setup>
-import PlaceholderImg from "./PlaceholderImg.vue";
-
 const doctors = [
-  { name: "BS. [Tên bác sĩ]", role: "Trưởng khoa Nội", bio: "[Số năm] kinh nghiệm điều trị nội khoa thú cưng.", imgLabel: "Ảnh chân dung bác sĩ 1" },
-  { name: "BS. [Tên bác sĩ]", role: "Ngoại khoa", bio: "Chuyên phẫu thuật và điều trị ngoại khoa.", imgLabel: "Ảnh chân dung bác sĩ 2" },
-  { name: "[Tên nhân viên]", role: "Grooming & Chăm sóc", bio: "Phụ trách tắm spa, cắt tỉa cho chó mèo.", imgLabel: "Ảnh chân dung nhân viên grooming" },
+  {
+    name: "BS. Vũ Thị Huyền",
+    role: "Giám đốc BV / Bác sĩ thú y",
+    bio: "Phụ trách chuyên môn và điều hành chung tại 2Vet An Khánh.",
+    img: "/images/team/huyen.jpg",
+  },
+  {
+    name: "BS. Hồ Diễn Thảo",
+    role: "Bác sĩ thú y",
+    bio: "Trực tiếp khám, điều trị và tư vấn chăm sóc thú cưng.",
+    img: "/images/team/thao.jpg",
+  },
+  {
+    name: "Nghiêm Thu Trang",
+    role: "Lễ tân - Thu ngân",
+    bio: "Hỗ trợ đặt lịch, đón tiếp và thanh toán cho khách hàng.",
+    img: "/images/team/trang.jpg",
+  },
 ];
 </script>
