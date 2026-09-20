@@ -55,7 +55,7 @@ const testimonials = [
   {
     name: "[Tên khách hàng]",
     pet: "chủ nuôi bé Bông",
-    quote: "Phòng khám sạch sẽ, bác sĩ nhẹ nhàng nên bé nhà mình không sợ mỗi lần đi tiêm phòng.",
+    quote: "Bệnh viện sạch sẽ, bác sĩ nhẹ nhàng nên bé nhà mình không sợ mỗi lần đi tiêm phòng.",
     imgLabel: "Ảnh khách hàng 3 cùng thú cưng",
   },
 ];

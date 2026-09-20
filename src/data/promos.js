@@ -53,7 +53,7 @@ export const fallbackPromo = {
   title: "Theo dõi Fanpage để không bỏ lỡ ưu đãi mới nhất",
   desc: "2Vet An Khánh thường xuyên có chương trình ưu đãi theo tuần/tháng cho khám bệnh, tiêm phòng và grooming.",
   cta: "Nhắn tin để được tư vấn",
-  imgLabel: "Ảnh/banner chung của phòng khám (không gắn chương trình cụ thể)",
+  imgLabel: "Ảnh/banner chung của bệnh viện (không gắn chương trình cụ thể)",
 };
 
 function toDate(str) {

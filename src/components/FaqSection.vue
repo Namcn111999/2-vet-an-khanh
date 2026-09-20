@@ -29,7 +29,7 @@ const openIndex = ref(0);
 
 const faqs = [
   { q: "Tôi có cần đặt lịch trước không?", a: "Nên đặt lịch trước qua form hoặc nhắn tin để được ưu tiên giờ khám, tránh chờ lâu vào giờ cao điểm." },
-  { q: "Phòng khám có nhận ca cấp cứu ngoài giờ không?", a: "[Điền chính sách cấp cứu thực tế của phòng khám tại đây]." },
+  { q: "Bệnh viện có nhận ca cấp cứu ngoài giờ không?", a: "[Điền chính sách cấp cứu thực tế của bệnh viện tại đây]." },
   { q: "Chi phí khám và điều trị được tính như thế nào?", a: "Chi phí phụ thuộc vào tình trạng cụ thể của thú cưng. Bác sĩ sẽ tư vấn và báo giá rõ trước khi thực hiện bất kỳ dịch vụ nào." },
   { q: "Tôi có thể thanh toán bằng hình thức nào?", a: "[Điền các hình thức thanh toán được chấp nhận: tiền mặt / chuyển khoản / quét mã...]." },
 ];

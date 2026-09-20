@@ -13,13 +13,13 @@ export const intents = [
   {
     id: "dia-chi",
     keywords: ["địa chỉ", "ở đâu", "chỗ nào", "map", "bản đồ", "đường nào"],
-    reply: "Phòng khám ở 29 Lô A20 KĐT Geleximco A, Tây Mỗ, Hà Nội. Bạn bấm nút bên dưới để xem đường đi nhé.",
+    reply: "Bệnh viện ở 29 Lô A20 KĐT Geleximco A, Tây Mỗ, Hà Nội. Bạn bấm nút bên dưới để xem đường đi nhé.",
     action: { label: "Xem bản đồ", scrollTo: "#top", external: "https://www.google.com/maps/place/B%E1%BB%87nh+vi%E1%BB%87n+th%C3%BA+y+2Vet+An+Kh%C3%A1nh/@21.0058754,105.7307084,17z/data=!3m1!4b1!4m6!3m5!1s0x3134534856d051a7:0x3dae2d9f362187f9!8m2!3d21.0058704!4d105.7332833!16s%2Fg%2F11mkff4l35" },
   },
   {
     id: "gia-kham",
     keywords: ["giá", "phí", "bao nhiêu tiền", "chi phí", "báo giá", "tiền"],
-    reply: "Chi phí tuỳ tình trạng cụ thể của thú cưng. Mình để bảng giá tham khảo bên dưới, hoặc để lại số điện thoại để phòng khám tư vấn chính xác hơn nhé.",
+    reply: "Chi phí tuỳ tình trạng cụ thể của thú cưng. Mình để bảng giá tham khảo bên dưới, hoặc để lại số điện thoại để bệnh viện tư vấn chính xác hơn nhé.",
     action: { label: "Xem bảng giá tham khảo", scrollTo: "#uu-dai" },
   },
   {
@@ -58,10 +58,10 @@ export const fallbackReply =
   "Mình chưa chắc câu trả lời cho câu hỏi này. Bạn nhắn trực tiếp qua Messenger hoặc gọi hotline 096 34 18126 để được hỗ trợ nhanh và chính xác nhất nhé!";
 
 export const quickReplies = [
-  { label: "Giờ mở cửa?", text: "Giờ mở cửa của phòng khám?" },
+  { label: "Giờ mở cửa?", text: "Giờ mở cửa của bệnh viện?" },
   { label: "Bảng giá?", text: "Chi phí khám bao nhiêu?" },
   { label: "Đặt lịch khám", text: "Tôi muốn đặt lịch khám" },
-  { label: "Địa chỉ ở đâu?", text: "Phòng khám ở đâu?" },
+  { label: "Địa chỉ ở đâu?", text: "Bệnh viện ở đâu?" },
 ];
 
 export function matchIntent(userText) {

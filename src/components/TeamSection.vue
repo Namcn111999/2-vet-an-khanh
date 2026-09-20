@@ -28,16 +28,28 @@
 <script setup>
 const doctors = [
   {
-    name: "BS. Vũ Thị Huyền",
+    name: "BS. Vũ Thị Huyên",
     role: "Giám đốc BV / Bác sĩ thú y",
     bio: "Phụ trách chuyên môn và điều hành chung tại 2Vet An Khánh.",
     img: "/images/team/huyen.jpg",
   },
   {
-    name: "BS. Hồ Diễn Thảo",
+    name: "BS. Hồ Diên Thảo",
     role: "Bác sĩ thú y",
     bio: "Trực tiếp khám, điều trị và tư vấn chăm sóc thú cưng.",
     img: "/images/team/thao.jpg",
+  },
+  {
+    name: "BS. Nguyễn Thị Duyến",
+    role: "Bác sĩ thú y",
+    bio: "Trực tiếp khám, điều trị và tư vấn chăm sóc thú cưng.",
+    img: "/images/team/duyen.jpg",
+  },
+  {
+    name: "BS. Nguyễn Thị Thanh Thảo",
+    role: "Bác sĩ thú y",
+    bio: "Trực tiếp khám, điều trị và tư vấn chăm sóc thú cưng.",
+    img: "/images/team/thanhthao.jpg",
   },
   {
     name: "Nghiêm Thu Trang",

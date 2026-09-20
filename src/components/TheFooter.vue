@@ -7,7 +7,7 @@
           <p class="font-display text-xl text-paper" style="font-weight: 600">2Vet <span class="text-amber">An Khánh</span></p>
         </div>
         <p class="mt-3 text-sm leading-relaxed max-w-[26ch]">
-          Phòng khám thú y tận tâm tại khu vực Tây Mỗ, Hà Nội.
+          Bệnh viện thú y tận tâm tại khu vực Vinhomes Smart City, An Khánh, Tây Mỗ, Hoài Đức.
         </p>
       </div>
 
