@@ -14,6 +14,12 @@
 // LƯU Ý: Umami có 2 bản (Cloud và tự host) với API hơi khác nhau theo từng phiên bản.
 // Code dưới đây viết theo API Umami Cloud v1 tại thời điểm viết — nếu tự host Umami,
 // có thể cần chỉnh lại đường dẫn endpoint hoặc cách đọc field trong response.
+//
+// Ngoài lượt xem/lượt khách (traffic), file này còn đếm sự kiện "dat_lich" — đây là
+// sự kiện được bắn lên mỗi khi khách bấm gửi form đặt lịch thành công (xem
+// src/components/BookingFormSection.vue), cho biết CHUYỂN ĐỔI THẬT chứ không chỉ
+// lượt ghé xem. Endpoint /events có thể khác tên tuỳ phiên bản Umami — nếu gọi lỗi,
+// số "Lượt đặt lịch" sẽ tự hiện "—" thay vì làm hỏng cả trang.
 
 export default async function handler(req, res) {
   const baseUrl = (process.env.UMAMI_API_URL || "https://api.umami.is/v1").replace(/\/$/, "");
@@ -55,12 +61,38 @@ export default async function handler(req, res) {
     }
   }
 
-  const [today, week, month, active] = await Promise.all([
+  // Đếm số lần sự kiện "dat_lich" xảy ra trong khoảng thời gian, bằng cách lấy danh
+  // sách sự kiện thô rồi đếm ở phía mình — cách này ổn định hơn qua các bản Umami
+  // khác nhau so với dùng endpoint tổng hợp riêng cho event.
+  async function leadsFor(startAt) {
+    try {
+      const url = `${baseUrl}/websites/${websiteId}/events?startAt=${startAt}&endAt=${now}&unit=day&timezone=Asia%2FHo_Chi_Minh`;
+      const r = await fetch(url, { headers });
+      if (!r.ok) return null;
+      const d = await r.json();
+      const list = Array.isArray(d) ? d : d.data || [];
+      return list.filter((ev) => (ev.eventName || ev.name) === "dat_lich").length;
+    } catch {
+      return null;
+    }
+  }
+
+  const [today, week, month, active, leadsToday, leadsWeek, leadsMonth] = await Promise.all([
     statsFor(now - DAY),
     statsFor(now - 7 * DAY),
     statsFor(now - 30 * DAY),
     activeNow(),
+    leadsFor(now - DAY),
+    leadsFor(now - 7 * DAY),
+    leadsFor(now - 30 * DAY),
   ]);
 
-  res.status(200).json({ configured: true, today, week, month, activeNow: active });
+  res.status(200).json({
+    configured: true,
+    today,
+    week,
+    month,
+    activeNow: active,
+    leads: { today: leadsToday, week: leadsWeek, month: leadsMonth },
+  });
 }

@@ -131,9 +131,9 @@ Prompt hệ thống (system prompt) định nghĩa cách bot trả lời nằm t
 
 Mở `src/data/chatbotIntents.js`, copy 1 object trong mảng `intents`, đổi `keywords` (liệt kê nhiều biến thể người dùng có thể gõ) và `reply`.
 
-## 12. Trang Admin Dashboard (theo dõi lượt truy cập)
+## 12. Trang Admin Dashboard (theo dõi lượt truy cập + chuyển đổi)
 
-Trang `/admin` (VD: `https://2vetankhanh.vn/admin`) đã code xong đầy đủ: màn hình nhập mật khẩu + dashboard hiển thị "Đang online", "Hôm nay", "7 ngày", "30 ngày". Không link công khai trang này ở đâu trên site, và đã chặn Google index qua `robots.txt`.
+Trang `/admin` (VD: `https://2vetankhanh.vn/admin`) đã code xong đầy đủ: màn hình nhập mật khẩu + dashboard 2 nhóm số liệu — **"Lưu lượng truy cập"** (Đang online, Hôm nay, 7 ngày, 30 ngày — cả lượt xem trang lẫn số khách mới ghé) và **"Chuyển đổi (đặt lịch thành công)"** (số khách đã thật sự bấm gửi form đặt lịch, theo hôm nay/7 ngày/30 ngày). Không link công khai trang này ở đâu trên site, và đã chặn Google index qua `robots.txt`.
 
 **Trang chỉ hoạt động sau khi deploy lên Vercel** (không chạy khi mở file .html tĩnh, vì cần 2 serverless function trong thư mục `/api`: `admin-login.js` kiểm tra mật khẩu, `analytics.js` lấy số liệu).
 
@@ -162,5 +162,11 @@ Trên Vercel → Project Settings → Environment Variables, thêm:
 Vào `https://<domain-của-bạn>/admin`, nhập mật khẩu đã đặt ở Bước 1 → thấy ngay số liệu thật.
 
 Nếu chưa làm Bước 2-3, trang `/admin` vẫn vào được (sau khi nhập đúng mật khẩu) nhưng sẽ hiển thị màn hướng dẫn cấu hình thay vì số liệu — không báo lỗi khó hiểu.
+
+### Số "Chuyển đổi (đặt lịch thành công)" hoạt động thế nào
+
+Mỗi khi khách bấm "Gửi thông tin đặt lịch" thành công trên trang, code sẽ tự bắn 1 sự kiện tên `dat_lich` lên Umami (xem `src/components/BookingFormSection.vue`). Trang `/admin` đếm số sự kiện này theo hôm nay/7 ngày/30 ngày qua endpoint `/events` của Umami.
+
+**Lưu ý kỹ thuật**: Umami có nhiều phiên bản với API hơi khác nhau, endpoint `/events` dùng trong `api/analytics.js` viết theo tài liệu tại thời điểm code — nếu sau khi deploy mà số "Chuyển đổi" cứ hiện "—" dù đã đặt lịch thử, khả năng cao endpoint đã đổi tên/tham số ở phiên bản Umami anh dùng. Cách kiểm tra nhanh: vào thẳng trang quản trị Umami (umami.is), mục Events/Sự kiện của website, xem có thấy sự kiện `dat_lich` ghi nhận không — nếu Umami có ghi nhận nhưng `/admin` không hiện số, báo lại để chỉnh đúng endpoint.
 
 **Về mức độ bảo mật**: đây là lớp bảo vệ đơn giản bằng 1 mật khẩu dùng chung, không có tài khoản riêng từng người, không giới hạn số lần thử sai — phù hợp cho nhu cầu nội bộ nhỏ, không phải chuẩn bảo mật doanh nghiệp. Không chia sẻ đường link `/admin` hay mật khẩu ra ngoài.

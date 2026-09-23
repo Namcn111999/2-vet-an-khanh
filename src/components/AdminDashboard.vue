@@ -32,7 +32,7 @@
       <!-- Dashboard -->
       <div v-else>
         <div class="flex items-center justify-between mb-8">
-          <h1 class="font-display text-2xl text-ink" style="font-weight: 600">Lượt truy cập</h1>
+          <h1 class="font-display text-2xl text-ink" style="font-weight: 600">Thống kê</h1>
           <button @click="load" class="text-sm text-clay-dark hover:text-clay font-medium" :disabled="loading">
             {{ loading ? "Đang tải..." : "Làm mới" }}
           </button>
@@ -56,26 +56,51 @@
         </div>
 
         <!-- Có dữ liệu -->
-        <div v-else-if="data && data.configured" class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-white border border-line rounded-2xl p-5">
-            <p class="text-sm text-ink/50 mb-1">Đang online</p>
-            <p class="stat-number text-3xl text-amber-dark">{{ data.activeNow ?? "—" }}</p>
+        <div v-else-if="data && data.configured">
+          <h2 class="text-sm font-semibold text-ink/50 uppercase tracking-wide mb-3">Lưu lượng truy cập</h2>
+          <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white border border-line rounded-2xl p-5">
+              <p class="text-sm text-ink/50 mb-1">Đang online</p>
+              <p class="stat-number text-3xl text-amber-dark">{{ data.activeNow ?? "—" }}</p>
+            </div>
+            <div class="bg-white border border-line rounded-2xl p-5">
+              <p class="text-sm text-ink/50 mb-1">Hôm nay</p>
+              <p class="stat-number text-3xl text-clay-dark">{{ data.today?.pageviews ?? "—" }}</p>
+              <p class="text-xs text-ink/40 mt-1">{{ data.today?.visitors ?? "—" }} khách mới ghé</p>
+            </div>
+            <div class="bg-white border border-line rounded-2xl p-5">
+              <p class="text-sm text-ink/50 mb-1">7 ngày qua</p>
+              <p class="stat-number text-3xl text-clay-dark">{{ data.week?.pageviews ?? "—" }}</p>
+              <p class="text-xs text-ink/40 mt-1">{{ data.week?.visitors ?? "—" }} khách mới ghé</p>
+            </div>
+            <div class="bg-white border border-line rounded-2xl p-5">
+              <p class="text-sm text-ink/50 mb-1">30 ngày qua</p>
+              <p class="stat-number text-3xl text-clay-dark">{{ data.month?.pageviews ?? "—" }}</p>
+              <p class="text-xs text-ink/40 mt-1">{{ data.month?.visitors ?? "—" }} khách mới ghé</p>
+            </div>
           </div>
-          <div class="bg-white border border-line rounded-2xl p-5">
-            <p class="text-sm text-ink/50 mb-1">Hôm nay</p>
-            <p class="stat-number text-3xl text-clay-dark">{{ data.today?.pageviews ?? "—" }}</p>
-            <p class="text-xs text-ink/40 mt-1">{{ data.today?.visitors ?? "—" }} khách</p>
+          <p class="text-xs text-ink/40 mt-3">
+            Số lớn = lượt xem trang (pageviews). Số nhỏ bên dưới = khách mới ghé (visitors) — mỗi khách chỉ tính 1 lần dù xem nhiều trang.
+          </p>
+
+          <h2 class="text-sm font-semibold text-ink/50 uppercase tracking-wide mt-10 mb-3">Chuyển đổi (đặt lịch thành công)</h2>
+          <div class="grid sm:grid-cols-3 gap-4">
+            <div class="bg-white border border-line rounded-2xl p-5">
+              <p class="text-sm text-ink/50 mb-1">Hôm nay</p>
+              <p class="stat-number text-3xl text-amber-dark">{{ data.leads?.today ?? "—" }}</p>
+            </div>
+            <div class="bg-white border border-line rounded-2xl p-5">
+              <p class="text-sm text-ink/50 mb-1">7 ngày qua</p>
+              <p class="stat-number text-3xl text-amber-dark">{{ data.leads?.week ?? "—" }}</p>
+            </div>
+            <div class="bg-white border border-line rounded-2xl p-5">
+              <p class="text-sm text-ink/50 mb-1">30 ngày qua</p>
+              <p class="stat-number text-3xl text-amber-dark">{{ data.leads?.month ?? "—" }}</p>
+            </div>
           </div>
-          <div class="bg-white border border-line rounded-2xl p-5">
-            <p class="text-sm text-ink/50 mb-1">7 ngày qua</p>
-            <p class="stat-number text-3xl text-clay-dark">{{ data.week?.pageviews ?? "—" }}</p>
-            <p class="text-xs text-ink/40 mt-1">{{ data.week?.visitors ?? "—" }} khách</p>
-          </div>
-          <div class="bg-white border border-line rounded-2xl p-5">
-            <p class="text-sm text-ink/50 mb-1">30 ngày qua</p>
-            <p class="stat-number text-3xl text-clay-dark">{{ data.month?.pageviews ?? "—" }}</p>
-            <p class="text-xs text-ink/40 mt-1">{{ data.month?.visitors ?? "—" }} khách</p>
-          </div>
+          <p class="text-xs text-ink/40 mt-3">
+            Số lượt khách đã bấm "Gửi thông tin đặt lịch" thành công ở form trên trang — đây là số phản ánh đúng hiệu quả nhất, không chỉ ghé xem.
+          </p>
         </div>
 
         <p v-if="loadError" class="text-sm text-red-600 mt-4">{{ loadError }}</p>

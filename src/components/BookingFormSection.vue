@@ -113,6 +113,12 @@ async function handleSubmit() {
     // =====================================================================
     console.log("Booking form submitted:", payload);
 
+    // Ghi nhận "lượt đặt lịch" là 1 sự kiện chuyển đổi trong Umami (tách biệt với
+    // lượt xem trang thường) — trang /admin sẽ đọc số liệu này để hiện đúng số
+    // khách đã thật sự để lại thông tin, không chỉ số người ghé xem.
+    // An toàn nếu chưa gắn Umami: window.umami sẽ là undefined, dòng dưới tự bỏ qua.
+    window.umami?.track("dat_lich", { service: form.service, utm_campaign: payload.utm_campaign });
+
     status.value = "success";
     form.name = "";
     form.phone = "";
