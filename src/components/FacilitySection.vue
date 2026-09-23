@@ -12,14 +12,10 @@
     </div>
 
     <div class="grid md:grid-cols-3 gap-4 md:gap-5" v-reveal="{ delay: 100 }">
-      <PlaceholderImg label="Ảnh: phòng khám tổng quát" aspect="aspect-[4/5]" class="md:row-span-2 md:!aspect-auto md:h-full" />
-      <PlaceholderImg label="Ảnh: phòng phẫu thuật / trang thiết bị" aspect="aspect-[4/3]" />
-      <PlaceholderImg label="Ảnh: khu vực chờ / quầy lễ tân" aspect="aspect-[4/3]" />
-      <PlaceholderImg label="Ảnh: khu grooming / tắm sấy" aspect="aspect-[4/3]" class="md:col-span-2" />
+      <img src="/images/facility/examroom.jpg" alt="Bác sĩ khám cho thú cưng tại 2Vet An Khánh" class="w-full aspect-[4/5] object-cover rounded-2xl md:row-span-2 md:!aspect-auto md:h-full" />
+      <img src="/images/facility/surgery.jpg" alt="Phòng phẫu thuật tại 2Vet An Khánh" class="w-full aspect-[4/3] object-cover rounded-2xl" />
+      <img src="/images/facility/reception.jpg" alt="Khu vực chờ và quầy lễ tân 2Vet An Khánh" class="w-full aspect-[4/3] object-cover rounded-2xl" />
+      <img src="/images/facility/grooming.jpg" alt="Khu grooming, tắm sấy tại 2Vet An Khánh" class="w-full aspect-[4/3] object-cover rounded-2xl md:col-span-2" />
     </div>
   </section>
 </template>
-
-<script setup>
-import PlaceholderImg from "./PlaceholderImg.vue";
-</script>

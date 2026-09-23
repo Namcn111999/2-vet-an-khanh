@@ -12,21 +12,12 @@
         class="grid md:grid-cols-2 gap-8 md:gap-14 items-center"
         v-reveal
       >
-        <div
-          class="relative flex flex-col items-center justify-center gap-2 border-2 border-dashed overflow-hidden aspect-[4/3]"
-          :class="[svc.tint.border, svc.tint.bg, svc.tint.text, i % 2 === 1 ? 'md:order-2' : '']"
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="opacity-70">
-            <path
-              d="M4 16.5L8.5 12l3 3 4-5L20 16.5M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          <p class="text-xs text-center px-4 leading-snug">{{ svc.imgLabel }}</p>
-        </div>
+        <img
+          :src="svc.img"
+          :alt="svc.title + ' tại 2Vet An Khánh'"
+          class="w-full aspect-[4/3] object-cover rounded-2xl"
+          :class="i % 2 === 1 ? 'md:order-2' : ''"
+        />
 
         <div :class="i % 2 === 1 ? 'md:order-1' : ''">
           <span
@@ -70,6 +61,7 @@ const services = [
     desc: "Thăm khám, chẩn đoán và điều trị nội – ngoại khoa cho chó mèo, từ các vấn đề thường gặp đến ca cần theo dõi sát.",
     points: ["Khám tổng quát & xét nghiệm cơ bản", "Điều trị nội trú khi cần", "Tư vấn theo dõi sau điều trị"],
     imgLabel: "Ảnh: bác sĩ đang khám cho chó/mèo trên bàn khám",
+    img: "/images/services/kham.jpg",
     tint: tints.clay,
   },
   {
@@ -78,6 +70,7 @@ const services = [
     desc: "Vệ sinh, cắt tỉa lông, chăm sóc da lông theo từng giống loài, giúp thú cưng sạch sẽ và thoải mái.",
     points: ["Tắm, sấy, cắt tỉa lông", "Cắt móng, vệ sinh tai", "Gói chăm sóc định kỳ"],
     imgLabel: "Ảnh: thú cưng đang được tắm/grooming",
+    img: "/images/services/spa.jpg",
     tint: tints.amber,
   },
   {
@@ -86,6 +79,7 @@ const services = [
     desc: "Lên lịch tiêm phòng đầy đủ theo độ tuổi, nhắc lịch tự động để không bỏ lỡ mũi tiêm quan trọng nào.",
     points: ["Tiêm phòng theo phác đồ chuẩn", "Nhắc lịch tiêm tự động", "Khám sức khoẻ định kỳ"],
     imgLabel: "Ảnh: bác sĩ đang tiêm phòng cho thú cưng",
+    img: "/images/services/tiem.jpg",
     tint: tints.clay,
   },
 ];
