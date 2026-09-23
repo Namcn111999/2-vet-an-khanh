@@ -12,7 +12,8 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
         </button>
 
-        <PlaceholderImg :label="promo.imgLabel" aspect="aspect-[16/9]" rounded="" />
+        <img v-if="promo.img" :src="promo.img" :alt="promo.title" class="w-full aspect-[16/9] object-cover" />
+        <PlaceholderImg v-else :label="promo.imgLabel" aspect="aspect-[16/9]" rounded="" />
 
         <div class="p-6">
           <span class="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber/15 text-amber-dark mb-3">

@@ -30,9 +30,10 @@ export const promos = [
     id: "trung-thu-2026",
     start: "2026-09-20",
     end: "2026-09-27",
-    title: "Trung Thu yêu thương – Bé cưng đón trăng rằm",
-    desc: "Giảm 10–15% gói tiêm phòng và khám định kỳ. Tặng ảnh polaroid mini cùng lồng đèn nhỏ cho thú cưng đến khám hoặc grooming trong tuần lễ Trung Thu.",
-    cta: "Đặt lịch nhận ưu đãi",
+    title: "Trung Thu Rộn Ràng – Bé ghé 2Vet, quà đã sẵn sàng",
+    desc: "Spa trọn gói tặng ngay ảnh polaroid mini và phụ kiện xinh cho boss. Đăng ảnh tag 2Vet An Khánh, có cơ hội nhận voucher 100.000đ. Đặt lịch từ 28–30/09 để giữ chỗ đầu tháng 10 và nhận thêm Flash Sale 5–10%.",
+    cta: "Đặt lịch nhận quà Trung Thu",
+    img: "/images/promo/trung-thu-2026.jpg",
     imgLabel: "Banner Trung Thu yêu thương, đồng bộ ảnh đang chạy ads",
   },
   {

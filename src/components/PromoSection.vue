@@ -16,7 +16,8 @@
           <p class="mt-5 text-ink/70 leading-relaxed max-w-[42ch]">{{ promo.desc }}</p>
           <a href="#dat-lich" class="btn-primary mt-7">{{ promo.cta }}</a>
         </div>
-        <PlaceholderImg :label="promo.imgLabel" aspect="aspect-[16/10]" rounded="" class="md:h-full" />
+        <img v-if="promo.img" :src="promo.img" :alt="promo.title" class="w-full aspect-[16/10] object-cover md:h-full" />
+        <PlaceholderImg v-else :label="promo.imgLabel" aspect="aspect-[16/10]" rounded="" class="md:h-full" />
       </div>
     </div>
   </section>
