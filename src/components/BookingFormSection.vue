@@ -105,7 +105,11 @@ async function handleSubmit() {
     // Gửi thông tin khách vào Google Sheet qua Google Apps Script (xem docs/google-sheet-leads.md).
     // Địa chỉ webhook đặt ở biến môi trường VITE_LEAD_WEBHOOK_URL. Chưa đặt thì form vẫn chạy
     // bình thường nhưng chỉ log ra console.
-    const webhook = import.meta.env.VITE_LEAD_WEBHOOK_URL;
+    // URL Apps Script không phải bí mật (chỉ nhận dữ liệu, không đọc được Sheet), nên để sẵn mặc định ở đây;
+    // vẫn có thể ghi đè bằng biến môi trường VITE_LEAD_WEBHOOK_URL.
+    const webhook =
+      import.meta.env.VITE_LEAD_WEBHOOK_URL ||
+      "https://script.google.com/macros/s/AKfycbzc6dIYoYtoIH5ayg3AKcTZ3EIxc2mRhvRbWQgO4XVk7gdYKqrYAmgM-pK7lANizrAa/exec";
     if (webhook) {
       // text/plain + no-cors để tránh preflight CORS của Apps Script; không đọc được phản hồi nên
       // chỉ báo lỗi khi mạng thật sự hỏng.
