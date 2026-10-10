@@ -47,7 +47,20 @@
     <!-- Umami Analytics — tự lấy VITE_UMAMI_WEBSITE_ID từ file .env, không cần sửa dòng này -->
     <script defer src="https://cloud.umami.is/script.js" data-website-id="%VITE_UMAMI_WEBSITE_ID%"></script>
 
-    <!-- TODO Facebook Pixel: dán snippet chuẩn của Meta, thay YOUR_PIXEL_ID -->
+    <!-- Meta Pixel Code -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1058068190466771');
+      fbq('track', 'PageView');
+    </script>
+    <!-- End Meta Pixel Code -->
     <!-- TODO Google Search Console: thêm thẻ xác minh khi đăng ký -->
 
     <!-- ===== Dữ liệu có cấu trúc (Schema.org) – giúp Google hiểu đây là bệnh viện thú y địa phương ===== -->
@@ -84,6 +97,7 @@
     </script>
   </head>
   <body class="bg-paper text-ink font-body antialiased">
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1058068190466771&ev=PageView&noscript=1" alt="" /></noscript>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

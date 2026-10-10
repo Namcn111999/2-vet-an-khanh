@@ -117,6 +117,7 @@ async function handleSubmit() {
     // lượt xem trang thường) — trang /admin sẽ đọc số liệu này để hiện đúng số
     // khách đã thật sự để lại thông tin, không chỉ số người ghé xem.
     // An toàn nếu chưa gắn Umami: window.umami sẽ là undefined, dòng dưới tự bỏ qua.
+    window.fbq?.("track", "Lead", { content_name: form.service });
     window.umami?.track("dat_lich", { service: form.service, utm_campaign: payload.utm_campaign });
 
     status.value = "success";
