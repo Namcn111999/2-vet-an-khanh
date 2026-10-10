@@ -102,15 +102,20 @@ async function handleSubmit() {
   const payload = { ...form, ...getUtmParams(), submittedAt: new Date().toISOString() };
 
   try {
-    // =====================================================================
-    // TODO – NỐI VÀO NƠI NHẬN LEAD THẬT (chọn 1 trong các cách sau):
-    //  1) Google Apps Script Web App ghi vào Google Sheet:
-    //     await fetch("https://script.google.com/macros/s/XXXX/exec", {
-    //       method: "POST", body: JSON.stringify(payload)
-    //     });
-    //  2) Zalo OA / CRM riêng: gọi API tương ứng ở đây.
-    // Hiện tại form chỉ log ra console để bạn kiểm tra dữ liệu khi test.
-    // =====================================================================
+    // Gửi thông tin khách vào Google Sheet qua Google Apps Script (xem docs/google-sheet-leads.md).
+    // Địa chỉ webhook đặt ở biến môi trường VITE_LEAD_WEBHOOK_URL. Chưa đặt thì form vẫn chạy
+    // bình thường nhưng chỉ log ra console.
+    const webhook = import.meta.env.VITE_LEAD_WEBHOOK_URL;
+    if (webhook) {
+      // text/plain + no-cors để tránh preflight CORS của Apps Script; không đọc được phản hồi nên
+      // chỉ báo lỗi khi mạng thật sự hỏng.
+      await fetch(webhook, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+      });
+    }
     console.log("Booking form submitted:", payload);
 
     // Ghi nhận "lượt đặt lịch" là 1 sự kiện chuyển đổi trong Umami (tách biệt với
