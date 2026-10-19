@@ -98,7 +98,9 @@ async function scrollToBottom() {
 
 function handleAction(action) {
   if (action.href) {
-    window.location.href = action.href;
+    // Messenger / Zalo mở tab mới để khách không rời khỏi trang
+    if (/^https?:/.test(action.href)) window.open(action.href, "_blank", "noopener");
+    else window.location.href = action.href;
     return;
   }
   if (action.scrollTo) {

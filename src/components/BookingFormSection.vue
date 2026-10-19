@@ -5,10 +5,10 @@
         <p class="kicker mb-4">Đặt lịch</p>
         <h2 class="section-title max-w-[18ch] mb-5">Để lại thông tin, đội ngũ sẽ liên hệ trong ít phút</h2>
         <p class="text-ink/60 max-w-[38ch] leading-relaxed">
-          Hoặc nhắn tin trực tiếp qua Messenger / gọi hotline nếu cần hỗ trợ ngay:
+          Hoặc nhắn tin trực tiếp qua Messenger / Zalo nếu cần hỗ trợ ngay:
         </p>
         <div class="flex flex-wrap gap-3 mt-5">
-          <a href="tel:0963418126" class="btn-secondary">Gọi 096 34 18126</a>
+          <a href="https://zalo.me/0963418126" target="_blank" rel="noopener" class="btn-secondary">Zalo 096 34 18126</a>
           <a href="https://m.me/2vetankhanh" target="_blank" rel="noopener" class="btn-secondary">
             Messenger
           </a>
@@ -74,7 +74,7 @@
           Đã nhận thông tin! Đội ngũ 2Vet An Khánh sẽ liên hệ lại sớm.
         </p>
         <p v-if="status === 'error'" class="text-red-600 text-sm">
-          Có lỗi khi gửi, vui lòng gọi hotline 096 34 18126 để đặt lịch nhanh hơn.
+          Có lỗi khi gửi, vui lòng nhắn Zalo hotline 096 34 18126 để đặt lịch nhanh hơn.
         </p>
       </form>
     </div>

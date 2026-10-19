@@ -16,7 +16,7 @@
 
       <div class="flex items-center gap-3">
         <a
-          href="tel:0963418126"
+          href="https://zalo.me/0963418126" target="_blank" rel="noopener"
           class="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-clay-dark"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

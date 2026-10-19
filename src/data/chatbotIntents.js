@@ -49,8 +49,8 @@ export const intents = [
   {
     id: "hotline",
     keywords: ["hotline", "số điện thoại", "gọi điện", "liên hệ", "số hotline"],
-    reply: "Bạn gọi ngay 096 34 18126 để được hỗ trợ nhanh nhất nhé!",
-    action: { label: "Gọi 096 34 18126", href: "tel:0963418126" },
+    reply: "Bạn nhắn Zalo hoặc gọi hotline 096 34 18126 để được hỗ trợ nhanh nhất nhé!",
+    action: { label: "Nhắn Zalo 096 34 18126", href: "https://zalo.me/0963418126" },
   },
 ];
 
