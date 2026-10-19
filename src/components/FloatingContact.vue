@@ -2,7 +2,7 @@
   <div class="fixed bottom-6 right-5 md:right-8 z-50 flex flex-col items-end gap-3">
     <button
       type="button"
-      @click="chatOpen = !chatOpen"
+      @click="toggleChat"
       class="fab-item group flex items-center gap-0"
       style="--fab-delay: 0ms"
       aria-label="Mở trợ lý chat"
@@ -22,7 +22,7 @@
   </div>
 
   <Transition name="fade">
-    <ChatWidget v-if="chatOpen" @close="chatOpen = false" />
+    <ChatWidget v-if="chatOpen" @close="closeChat" />
   </Transition>
 </template>
 
@@ -30,13 +30,38 @@
 import { ref, onMounted } from "vue";
 import ChatWidget from "./ChatWidget.vue";
 
+// Tự mở khung chat sau AUTO_OPEN_MS (mili giây) nếu khách chưa tự bấm — đổi số này nếu muốn
+// sớm/muộn hơn. 12 giây để popup ưu đãi (bật 1,2s, tự tắt sau 8s) kết thúc trước, hai thứ không chồng nhau.
+// Chỉ tự mở 1 lần mỗi lần vào trang; nếu khách đã mở/đóng khung chat hoặc đang gõ vào ô nhập thì không làm phiền.
+const AUTO_OPEN_MS = 12000;
+
 const chatOpen = ref(false);
 const showNudge = ref(false);
+let touched = false; // khách đã tự bấm mở/đóng chat
+
+function toggleChat() {
+  touched = true;
+  chatOpen.value = !chatOpen.value;
+  showNudge.value = false;
+}
+
+function closeChat() {
+  touched = true;
+  chatOpen.value = false;
+}
 
 onMounted(() => {
   setTimeout(() => {
     if (!chatOpen.value) showNudge.value = true;
   }, 4000);
+
+  setTimeout(() => {
+    if (touched || chatOpen.value) return;
+    const el = document.activeElement;
+    if (el && ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)) return; // khách đang điền form
+    chatOpen.value = true;
+    showNudge.value = false;
+  }, AUTO_OPEN_MS);
 });
 </script>
 
