@@ -14,7 +14,7 @@
         <div class="mt-8 flex flex-wrap items-center gap-4">
           <a href="#dat-lich" class="btn-primary">Đặt lịch khám ngay</a>
           <a
-            href="https://m.me/[tên-trang-facebook]"
+            href="https://m.me/2vetankhanh"
             target="_blank"
             rel="noopener"
             class="btn-secondary"

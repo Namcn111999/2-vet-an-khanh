@@ -9,7 +9,7 @@
         </p>
         <div class="flex flex-wrap gap-3 mt-5">
           <a href="tel:0963418126" class="btn-secondary">Gọi 096 34 18126</a>
-          <a href="https://m.me/[tên-trang-facebook]" target="_blank" rel="noopener" class="btn-secondary">
+          <a href="https://m.me/2vetankhanh" target="_blank" rel="noopener" class="btn-secondary">
             Messenger
           </a>
         </div>

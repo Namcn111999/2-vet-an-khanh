@@ -133,7 +133,7 @@ async function send(text) {
     messages.value.push({
       role: "bot",
       text: intent ? intent.reply : fallbackReply,
-      action: intent ? intent.action : { label: "Nhắn tin Messenger", href: "https://m.me/[tên-trang-facebook]" },
+      action: intent ? intent.action : { label: "Nhắn tin Messenger", href: "https://m.me/2vetankhanh" },
     });
   }
   scrollToBottom();
