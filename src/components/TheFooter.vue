@@ -32,7 +32,7 @@
         <p class="text-sm font-semibold text-paper mb-3">Kết nối</p>
         <ul class="space-y-2 text-sm">
           <li><a href="https://www.facebook.com/2vetankhanh" target="_blank" rel="noopener" class="hover:text-paper">Facebook</a></li>
-          <li><a href="https://zalo.me/[oa-id]" target="_blank" rel="noopener" class="hover:text-paper">Zalo OA</a></li>
+          <li><a href="https://zalo.me/0963418126" target="_blank" rel="noopener" class="hover:text-paper">Zalo</a></li>
         </ul>
       </div>
     </div>
