@@ -9,6 +9,16 @@
 
 export const promos = [
   {
+    id: "giao-mua-2026-10",
+    start: "2026-10-18",
+    end: "2026-10-31",
+    title: "Giao mùa – Nguy cơ cao chó mèo mắc bệnh truyền nhiễm",
+    desc: "Thời tiết thay đổi thất thường là điểm lý tưởng để virus parvo ở chó và giảm bạch cầu ở mèo bùng phát. Tiêm phòng đầy đủ, đúng lịch và đưa bé đi khám định kỳ để bảo vệ thú cưng ngay hôm nay.",
+    cta: "Đặt lịch tiêm phòng",
+    img: "/images/promo/giao-mua-2026.jpg",
+    imgLabel: "Banner Giao mùa – nguy cơ cao chó mèo mắc bệnh truyền nhiễm",
+  },
+  {
     id: "quoc-khanh-2026",
     start: "2026-09-01",
     end: "2026-09-03",
