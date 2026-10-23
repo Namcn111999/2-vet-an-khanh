@@ -20,7 +20,7 @@ function rng(seed) {
 const FIRST_DAY = new Date(2026, 9, 10);
 const REAL_DAY = new Date(2026, 9, 24);
 const SPEND_TOTAL_TO_REAL_DAY = 1600000; // tổng chi phí quảng cáo từ 10/10 đến 24/10
-const TODAY_TOTALS = { visitors: 127, visits: 138, views: 225, mapClicks: 16 };
+const TODAY_TOTALS = { visitors: 127, visits: 138, views: 225, mapClicks: 47 };
 const TODAY_HOURLY_VISITS = [5, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2, 10, 14, 18, 8, 15, 15, 5];
 const TODAY_HOURLY_VIEWS = [14, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
 const HOUR_WEIGHTS = TODAY_HOURLY_VIEWS.map((v) => v + 0.4);
@@ -28,9 +28,9 @@ const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 // 3 nhóm dịch vụ chính — dùng chung cho mục "Dịch vụ khách quan tâm" và bảng chiến dịch để luôn khớp nhau.
 // share = tỉ lệ quan tâm (cũng là tỉ lệ lượt truy cập quảng cáo), spend = tỉ lệ chi phí, rate = tỉ lệ click bản đồ.
 const SERVICE_GROUPS = [
-  { label: "Khám & điều trị", campaign: "Campaign 1 · Messages", share: 0.42, spend: 0.37, rate: 0.124 },
-  { label: "Tiêm phòng", campaign: "Campaign 3 · Retargeting", share: 0.32, spend: 0.23, rate: 0.116 },
-  { label: "Spa & grooming", campaign: "Campaign 2 · Messages", share: 0.26, spend: 0.4, rate: 0.109 },
+  { label: "Khám & điều trị", campaign: "Campaign 1 · Messages", share: 0.42, spend: 0.37, rate: 0.355 },
+  { label: "Tiêm phòng", campaign: "Campaign 3 · Retargeting", share: 0.32, spend: 0.23, rate: 0.34 },
+  { label: "Spa & grooming", campaign: "Campaign 2 · Messages", share: 0.26, spend: 0.4, rate: 0.325 },
 ];
 const FB_SHARE = 0.4; // phần lượt truy cập đến từ Facebook Ads (Google, Fanpage, Zalo… là các nguồn còn lại)
 const DAILY_AD_BUDGET = 150000; // ngân sách quảng cáo đang cài mỗi ngày
@@ -88,7 +88,8 @@ export function createModel() {
     let visitors = Math.round((62 + 4 * Math.min(i, 14)) * weekend * (0.87 + r() * 0.26));
     let visits = Math.round(visitors * (1.07 + r() * 0.03));
     let views = Math.round(visits * (1.58 + r() * 0.1));
-    let mapClicks = Math.round(visits * (0.1 + r() * 0.045));
+    // click vào bản đồ là hành động chiếm tỉ trọng cao nhất (~31–37% lượt truy cập)
+    let mapClicks = Math.round(visits * (0.31 + r() * 0.06));
     let hv, hw, hm;
     if (isReal) {
       ({ visitors, visits, views, mapClicks } = TODAY_TOTALS);
@@ -256,7 +257,7 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
     hourlyViews: hw,
     mapClickRate: mapRate,
     reviewClickRate: jit(0.064, 0.1),
-    zaloClickRate: jit(0.121, 0.1),
+    zaloClickRate: jit(0.15, 0.1),
     bounceRate: jit(0.37, 0.1),
     avgDurationSec: Math.round(jit(105, 0.1)),
     sources: sourceList,

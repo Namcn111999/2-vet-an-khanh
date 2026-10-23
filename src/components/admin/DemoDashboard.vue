@@ -102,7 +102,7 @@
               <span class="font-semibold text-ink">{{ pct(f.rate) }}</span>
             </div>
             <div class="h-2.5 rounded-full bg-tan overflow-hidden">
-              <div class="h-full rounded-full" :style="{ width: Math.min(100, f.rate * 100 * 2.4) + '%', background: ['#C97D3D', '#7B391A', '#FFA400', '#EAD8C7'][i] }"></div>
+              <div class="h-full rounded-full" :style="{ width: Math.min(100, f.rate * 100 * 2.4) + '%', background: ['#7B391A', '#C97D3D', '#FFA400'][i] }"></div>
             </div>
           </li>
         </ul>
@@ -267,12 +267,14 @@ const pct = (v) => `${(v * 100).toFixed(1).replace(".", ",")}%`;
 const money = (v) => `${v.toLocaleString("vi-VN")}đ`;
 const mmss = (s) => `${Math.floor(s / 60)}p ${String(s % 60).padStart(2, "0")}s`;
 
-const interactions = computed(() => [
-  { name: "Bấm Zalo / Messenger", rate: d.value.zaloClickRate },
-  { name: "Click vào bản đồ", rate: d.value.mapClickRate },
-  { name: "Click xem đánh giá Google", rate: d.value.reviewClickRate },
-  { name: "Cuộn tới cuối trang", rate: 0.31 },
-]);
+// Các hành động của khách, sắp theo tỉ lệ giảm dần (click bản đồ cao nhất)
+const interactions = computed(() =>
+  [
+    { name: "Click vào bản đồ", rate: d.value.mapClickRate },
+    { name: "Bấm Zalo / Messenger", rate: d.value.zaloClickRate },
+    { name: "Click xem đánh giá Google", rate: d.value.reviewClickRate },
+  ].sort((a, b) => b.rate - a.rate)
+);
 
 const kpis = computed(() => {
   const x = d.value;
