@@ -15,28 +15,34 @@ function rng(seed) {
 const DAYS = 30;
 const fmt = (d) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 
-function series(seed, base, growth) {
+// Quy mô và tỉ lệ lấy theo số liệu thật của 24 giờ gần nhất trên Umami:
+// 127 người truy cập, 138 lượt truy cập (≈1,09 lượt/người), 225 lượt xem (≈1,63 trang/lượt).
+// Ngày cuối cùng (hôm nay) khớp đúng 3 số này; các ngày trước đó biến động quanh cùng quy mô.
+const TODAY = { visitors: 127, visits: 138, views: 225, mapClicks: 16 };
+
+function series(seed, base, growth, last) {
   const r = rng(seed);
   const end = new Date();
   const out = [];
   for (let i = 0; i < DAYS; i++) {
     const d = new Date(end);
     d.setDate(end.getDate() - (DAYS - 1 - i));
-    const weekend = d.getDay() === 0 || d.getDay() === 6 ? 1.18 : 1;
-    const visitors = Math.round((base + growth * i) * weekend * (0.85 + r() * 0.3));
-    const visits = Math.round(visitors * (1.08 + r() * 0.06));
-    const views = Math.round(visits * (1.25 + r() * 0.2));
-    const mapClicks = Math.round(visits * (0.09 + r() * 0.06));
+    const weekend = d.getDay() === 0 || d.getDay() === 6 ? 1.15 : 1;
+    const visitors = Math.round((base + growth * i) * weekend * (0.82 + r() * 0.36));
+    const visits = Math.round(visitors * (1.07 + r() * 0.03));
+    const views = Math.round(visits * (1.58 + r() * 0.1));
+    const mapClicks = Math.round(visits * (0.1 + r() * 0.045));
     out.push({ label: fmt(d), visitors, visits, views, mapClicks });
   }
+  if (last) Object.assign(out[DAYS - 1], last);
   return out;
 }
 
 const sum = (arr, k) => arr.reduce((s, x) => s + x[k], 0);
 
 export function buildDemo() {
-  const daily = series(7, 38, 1.9);
-  const prev = series(21, 30, 1.4);
+  const daily = series(7, 70, 1.5, TODAY);
+  const prev = series(21, 52, 1.2);
   const tot = (a) => ({ visitors: sum(a, "visitors"), visits: sum(a, "visits"), views: sum(a, "views"), mapClicks: sum(a, "mapClicks") });
   const cur = tot(daily);
   const before = tot(prev);
@@ -56,7 +62,9 @@ export function buildDemo() {
     return { ...c, visits, mapClicks, cpv: Math.round(c.spend / visits) };
   });
 
-  const hourly = [1, 0, 0, 0, 1, 2, 5, 14, 26, 31, 34, 38, 29, 22, 27, 30, 28, 33, 41, 46, 44, 32, 15, 6];
+  // Lượt truy cập / lượt xem theo giờ của hôm nay — đúng hình dạng thật (tổng 138 và 225)
+  const hourlyVisits = [1, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2, 10, 14, 18, 8, 15, 15, 5];
+  const hourlyViews = [1, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
 
   return {
     days: daily.map((d) => d.label),
@@ -69,8 +77,8 @@ export function buildDemo() {
       mapClicks: cur.mapClicks / before.mapClicks - 1,
     },
     bounceRate: 0.37,
-    avgDurationSec: 96,
-    mapClickRate: 0.118,
+    avgDurationSec: 105,
+    mapClickRate: cur.mapClicks / cur.visits,
     reviewClickRate: 0.064,
     zaloClickRate: 0.121,
     sources: [
@@ -85,7 +93,8 @@ export function buildDemo() {
       { name: "Máy tính", value: 0.14 },
       { name: "Máy tính bảng", value: 0.02 },
     ],
-    hourly,
+    hourlyVisits,
+    hourlyViews,
     services: [
       { name: "Khám & điều trị", value: 38 },
       { name: "Tiêm phòng", value: 29 },
@@ -95,7 +104,7 @@ export function buildDemo() {
     campaigns,
     interactions: [
       { name: "Bấm Zalo / Messenger", rate: 0.121 },
-      { name: "Click vào bản đồ", rate: 0.118 },
+      { name: "Click vào bản đồ", rate: cur.mapClicks / cur.visits },
       { name: "Click xem đánh giá Google", rate: 0.064 },
       { name: "Cuộn tới cuối trang", rate: 0.31 },
     ],

@@ -64,11 +64,14 @@
     <!-- Khung giờ, dịch vụ, thiết bị -->
     <div class="grid md:grid-cols-3 gap-4 mt-4">
       <section class="bg-white border border-line rounded-2xl p-5 md:col-span-2">
-        <h3 class="font-semibold text-ink mb-1">Khung giờ khách truy cập nhiều nhất</h3>
+        <h3 class="font-semibold text-ink mb-1">Khung giờ khách truy cập (24 giờ gần nhất)</h3>
         <p class="text-xs text-ink/45 mb-3">Dùng để chọn giờ chạy quảng cáo</p>
         <TrendChart
           :labels="hours"
-          :series="[{ name: 'Lượt truy cập', color: '#FFA400', values: d.hourly, type: 'bar' }]"
+          :series="[
+            { name: 'Lượt xem trang', color: '#F2DCC0', values: d.hourlyViews, type: 'bar' },
+            { name: 'Lượt truy cập', color: '#FFA400', values: d.hourlyVisits, type: 'bar' },
+          ]"
           :height="200"
           aria-label="Biểu đồ cột lượt truy cập theo giờ trong ngày"
         />
