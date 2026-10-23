@@ -21,6 +21,13 @@ const TODAY_HOURLY_VISITS = [5, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2,
 const TODAY_HOURLY_VIEWS = [14, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
 const HOUR_WEIGHTS = TODAY_HOURLY_VIEWS.map((v) => v + 0.4);
 const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+// 3 nhóm dịch vụ chính — dùng chung cho mục "Dịch vụ khách quan tâm" và bảng chiến dịch để luôn khớp nhau.
+// share = tỉ lệ quan tâm (cũng là tỉ lệ lượt truy cập quảng cáo), spend = tỉ lệ chi phí, rate = tỉ lệ click bản đồ.
+const SERVICE_GROUPS = [
+  { label: "Khám & điều trị", campaign: "Campaign 1 · Messages", share: 0.42, spend: 0.37, rate: 0.124 },
+  { label: "Tiêm phòng", campaign: "Campaign 3 · Retargeting", share: 0.32, spend: 0.23, rate: 0.116 },
+  { label: "Spa & grooming", campaign: "Campaign 2 · Messages", share: 0.26, spend: 0.4, rate: 0.109 },
+];
 const FB_SHARE = 0.62; // phần lượt truy cập đến từ Facebook Ads
 const MONTH_AD_SPEND = 1600000; // chi phí quảng cáo 30 ngày gần nhất
 
@@ -157,9 +164,6 @@ export function computePeriod(model, mode, anchorIn) {
   const hw = sumArr(days, "hourlyViews");
   const hm = sumArr(days, "hourlyMap");
 
-  const shares = [0.38, 0.29, 0.24, 0.09];
-  const spendShare = [0.3375, 0.2125, 0.3625, 0.0875];
-  const rates = [0.124, 0.116, 0.109, 0.112];
   // Nguồn truy cập: tổng các nguồn luôn bằng đúng tổng lượt truy cập của kỳ
   const srcVals = allocate(cur.visits, [FB_SHARE, 0.14, 0.08, 0.09, 0.07]);
   const sourceList = [
@@ -172,23 +176,18 @@ export function computePeriod(model, mode, anchorIn) {
 
   // Chiến dịch: lượt truy cập chia hết phần "Facebook Ads", chi phí chia hết tổng chi phí của kỳ
   const fbVisits = srcVals[0];
-  const visitsBy = allocate(fbVisits, shares);
-  const spendBy = allocate(Math.round(cur.spend / 1000), spendShare).map((x) => x * 1000);
-  const campaigns = [
-    { name: "Campaign 1 · Messages", label: "Khám & điều trị" },
-    { name: "Campaign 3 · Retargeting", label: "Tiêm phòng" },
-    { name: "Campaign 2 · Messages", label: "Spa & grooming" },
-    { name: "Test creative (Halloween…)", label: "Khác" },
-  ].map((c, i) => {
+  const visitsBy = allocate(fbVisits, SERVICE_GROUPS.map((g) => g.share));
+  const spendBy = allocate(Math.round(cur.spend / 1000), SERVICE_GROUPS.map((g) => g.spend)).map((x) => x * 1000);
+  const campaigns = SERVICE_GROUPS.map((g, i) => {
     const visits = visitsBy[i];
     const spend = spendBy[i];
-    const mapClicks = Math.round(visits * rates[i]);
-    return { ...c, visits, mapClicks, spend, rate: visits ? mapClicks / visits : 0, cpv: visits ? Math.round(spend / visits) : 0 };
+    const mapClicks = Math.round(visits * g.rate);
+    return { name: g.campaign, label: g.label, visits, mapClicks, spend, rate: visits ? mapClicks / visits : 0, cpv: visits ? Math.round(spend / visits) : 0 };
   });
 
   // Khách click bản đồ gần đây trong kỳ đang xem: lấy từ các giờ có click, mới nhất trước
   const areas = ["Hoài Đức, Hà Nội", "Hoài Đức, Hà Nội", "Nam Từ Liêm, Hà Nội", "Hà Đông, Hà Nội", "Thanh Xuân, Hà Nội"];
-  const svcs = ["Khám & điều trị", "Tiêm phòng", "Spa & grooming", "Khám & điều trị"];
+  const svcs = SERVICE_GROUPS.map((g) => g.label);
   const when = (dt) => {
     const diff = Math.round((model.today - dt) / 86400000);
     return diff === 0 ? "Hôm nay" : diff === 1 ? "Hôm qua" : dm(dt);
@@ -234,12 +233,7 @@ export function computePeriod(model, mode, anchorIn) {
       { name: "Máy tính", value: 0.14 },
       { name: "Máy tính bảng", value: 0.02 },
     ],
-    services: [
-      { name: "Khám & điều trị", value: 38 },
-      { name: "Tiêm phòng", value: 29 },
-      { name: "Spa & grooming", value: 24 },
-      { name: "Khác", value: 9 },
-    ],
+    services: SERVICE_GROUPS.map((g) => ({ name: g.label, value: Math.round(g.share * 100) })),
     campaigns,
     recentMapClicks: recent,
   };
