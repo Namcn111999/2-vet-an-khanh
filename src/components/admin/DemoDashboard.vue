@@ -1,12 +1,38 @@
 <template>
   <div>
+    <!-- Chọn kỳ xem: Ngày / Tuần / Tháng, lùi-tiến kỳ và chọn ngày cụ thể -->
+    <div class="flex flex-wrap items-center gap-3 mb-6">
+      <div class="inline-flex rounded-full border border-line bg-white p-1 text-sm" role="tablist" aria-label="Khoảng thời gian">
+        <button
+          v-for="m in modes" :key="m.id" role="tab" :aria-selected="mode === m.id" @click="mode = m.id"
+          class="px-4 py-1.5 rounded-full transition-colors"
+          :class="mode === m.id ? 'bg-clay-dark text-paper' : 'text-ink/60 hover:text-ink'"
+        >{{ m.label }}</button>
+      </div>
+
+      <div class="inline-flex items-center gap-1">
+        <button @click="move(-1)" :disabled="!canPrev" aria-label="Kỳ trước" class="w-9 h-9 rounded-full border border-line bg-white text-ink/70 hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed">‹</button>
+        <span class="px-3 text-sm font-semibold text-clay-dark min-w-[11rem] text-center">{{ label }}</span>
+        <button @click="move(1)" :disabled="!canNext" aria-label="Kỳ sau" class="w-9 h-9 rounded-full border border-line bg-white text-ink/70 hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed">›</button>
+      </div>
+
+      <label class="inline-flex items-center gap-2 text-sm text-ink/60">
+        <span class="hidden sm:inline">Chọn ngày</span>
+        <input
+          type="date" :value="dateInput" :min="minInput" :max="maxInput" @change="pickDate"
+          class="rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/40"
+        />
+      </label>
+      <button v-if="!isCurrent" @click="anchor = model.today" class="text-sm text-clay-dark hover:text-clay font-medium">Về hôm nay</button>
+    </div>
+
     <!-- Thẻ tổng quan -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div v-for="k in kpis" :key="k.label" class="bg-white border border-line rounded-2xl p-5">
         <p class="text-sm text-ink/50 mb-1">{{ k.label }}</p>
         <p class="stat-number text-3xl text-clay-dark">{{ k.value }}</p>
         <p v-if="k.delta !== undefined" class="text-xs mt-1.5 font-medium" :class="k.delta >= 0 ? 'text-green-700' : 'text-red-600'">
-          {{ k.delta >= 0 ? "▲" : "▼" }} {{ Math.abs(Math.round(k.delta * 100)) }}% so với 30 ngày trước
+          {{ k.delta >= 0 ? "▲" : "▼" }} {{ Math.abs(Math.round(k.delta * 100)) }}% so với {{ prevText }}
         </p>
         <p v-else class="text-xs mt-1.5 text-ink/40">{{ k.note }}</p>
       </div>
@@ -16,12 +42,12 @@
     <div class="grid lg:grid-cols-3 gap-4 mt-4">
       <section class="lg:col-span-2 bg-white border border-line rounded-2xl p-5">
         <h3 class="font-semibold text-ink mb-1">Lượt truy cập theo ngày</h3>
-        <p class="text-xs text-ink/45 mb-3">Người truy cập và lượt xem trang, 30 ngày gần nhất</p>
+        <p class="text-xs text-ink/45 mb-3">Người truy cập và lượt xem trang · {{ d.trendTitle }}</p>
         <TrendChart
-          :labels="d.days"
+          :labels="d.trend.labels"
           :series="[
-            { name: 'Lượt xem trang', color: '#EAD8C7', values: d.daily.map((x) => x.views), type: 'line', fill: true },
-            { name: 'Người truy cập', color: '#FFA400', values: d.daily.map((x) => x.visitors), type: 'line', fill: true },
+            { name: 'Lượt xem trang', color: '#EAD8C7', values: d.trend.views, type: 'line', fill: true },
+            { name: 'Người truy cập', color: '#FFA400', values: d.trend.visitors, type: 'line', fill: true },
           ]"
           aria-label="Biểu đồ đường lượt truy cập theo ngày"
         />
@@ -35,11 +61,11 @@
 
     <div class="grid lg:grid-cols-3 gap-4 mt-4">
       <section class="lg:col-span-2 bg-white border border-line rounded-2xl p-5">
-        <h3 class="font-semibold text-ink mb-1">Lượt click vào bản đồ theo ngày</h3>
+        <h3 class="font-semibold text-ink mb-1">Lượt click vào bản đồ theo {{ d.mapSeries.unit }}</h3>
         <p class="text-xs text-ink/45 mb-3">Khách bấm xem đường đi tới phòng khám</p>
         <TrendChart
-          :labels="d.days"
-          :series="[{ name: 'Click bản đồ', color: '#7B391A', values: d.daily.map((x) => x.mapClicks), type: 'bar' }]"
+          :labels="d.mapSeries.labels"
+          :series="[{ name: 'Click bản đồ', color: '#7B391A', values: d.mapSeries.values, type: 'bar' }]"
           :height="220"
           aria-label="Biểu đồ cột lượt click vào bản đồ theo ngày"
         />
@@ -48,7 +74,7 @@
         <h3 class="font-semibold text-ink mb-1">Khách tương tác với trang</h3>
         <p class="text-xs text-ink/45 mb-5">Tỉ lệ khách thực hiện từng hành động</p>
         <ul class="space-y-3">
-          <li v-for="(f, i) in d.interactions" :key="f.name">
+          <li v-for="(f, i) in interactions" :key="f.name">
             <div class="flex justify-between text-sm mb-1">
               <span class="text-ink/70">{{ f.name }}</span>
               <span class="font-semibold text-ink">{{ pct(f.rate) }}</span>
@@ -64,8 +90,8 @@
     <!-- Khung giờ, dịch vụ, thiết bị -->
     <div class="grid md:grid-cols-3 gap-4 mt-4">
       <section class="bg-white border border-line rounded-2xl p-5 md:col-span-2">
-        <h3 class="font-semibold text-ink mb-1">Khung giờ khách truy cập (24 giờ gần nhất)</h3>
-        <p class="text-xs text-ink/45 mb-3">Dùng để chọn giờ chạy quảng cáo</p>
+        <h3 class="font-semibold text-ink mb-1">Khung giờ khách truy cập</h3>
+        <p class="text-xs text-ink/45 mb-3">Tổng theo giờ trong {{ mode === "day" ? "ngày" : mode === "week" ? "tuần" : "tháng" }} đang xem · dùng để chọn giờ chạy quảng cáo</p>
         <TrendChart
           :labels="hours"
           :series="[
@@ -133,26 +159,65 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import TrendChart from "./TrendChart.vue";
 import DonutChart from "./DonutChart.vue";
-import { buildDemo } from "../../data/demoStats";
+import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf } from "../../data/demoStats";
 
-const d = buildDemo();
+const model = createModel();
+const modes = [
+  { id: "day", label: "Ngày" },
+  { id: "week", label: "Tuần" },
+  { id: "month", label: "Tháng" },
+];
+const mode = ref("day");
+const anchor = ref(model.today);
+
+const d = computed(() => computePeriod(model, mode.value, anchor.value));
+const label = computed(() => periodLabel(mode.value, d.value.anchor));
+const prevText = computed(() => ({ day: "hôm trước", week: "tuần trước", month: "tháng trước" }[mode.value]));
+
+// Lùi / tiến kỳ — không vượt quá hôm nay hay trước dữ liệu có sẵn
+const canNext = computed(() => periodRange(mode.value, d.value.anchor).end < model.today);
+const canPrev = computed(() => periodRange(mode.value, d.value.anchor).start > model.first);
+const isCurrent = computed(() => d.value.anchor.getTime() === model.today.getTime());
+function move(dir) {
+  const next = shiftAnchor(mode.value, d.value.anchor, dir);
+  anchor.value = next > model.today ? model.today : next < model.first ? model.first : next;
+}
+const toInput = (x) => keyOf(x);
+const dateInput = computed(() => toInput(d.value.anchor));
+const minInput = toInput(model.first);
+const maxInput = toInput(model.today);
+function pickDate(e) {
+  if (!e.target.value) return;
+  const [y, m, dd] = e.target.value.split("-").map(Number);
+  anchor.value = new Date(y, m - 1, dd);
+}
+
 const hours = Array.from({ length: 24 }, (_, h) => `${h}h`);
 const pct = (v) => `${(v * 100).toFixed(1).replace(".", ",")}%`;
 const money = (v) => `${v.toLocaleString("vi-VN")}đ`;
 const mmss = (s) => `${Math.floor(s / 60)}p ${String(s % 60).padStart(2, "0")}s`;
 
-const totalSpend = d.campaigns.reduce((s, c) => s + c.spend, 0);
-const kpis = computed(() => [
-  { label: "Người truy cập", value: d.totals.visitors.toLocaleString("vi-VN"), delta: d.delta.visitors },
-  { label: "Lượt xem trang", value: d.totals.views.toLocaleString("vi-VN"), delta: d.delta.views },
-  { label: "Tỉ lệ click vào bản đồ", value: pct(d.mapClickRate), delta: d.delta.mapClicks },
-  { label: "Tỉ lệ click đánh giá Google", value: pct(d.reviewClickRate), note: "Xem đánh giá 4,8★ trên Google" },
-  { label: "Tỉ lệ thoát", value: pct(d.bounceRate), note: "Càng thấp càng tốt" },
-  { label: "Thời gian trên trang", value: mmss(d.avgDurationSec), note: "Trung bình mỗi lượt" },
-  { label: "Tỉ lệ bấm Zalo / Messenger", value: pct(d.zaloClickRate), note: "Khách chủ động nhắn tin" },
-  { label: "Chi phí quảng cáo", value: money(totalSpend), note: "30 ngày gần nhất" },
+const interactions = computed(() => [
+  { name: "Bấm Zalo / Messenger", rate: d.value.zaloClickRate },
+  { name: "Click vào bản đồ", rate: d.value.mapClickRate },
+  { name: "Click xem đánh giá Google", rate: d.value.reviewClickRate },
+  { name: "Cuộn tới cuối trang", rate: 0.31 },
 ]);
+
+const kpis = computed(() => {
+  const x = d.value;
+  return [
+    { label: "Người truy cập", value: x.totals.visitors.toLocaleString("vi-VN"), delta: x.delta.visitors },
+    { label: "Lượt xem trang", value: x.totals.views.toLocaleString("vi-VN"), delta: x.delta.views },
+    { label: "Tỉ lệ click vào bản đồ", value: pct(x.mapClickRate), delta: x.delta.mapClicks },
+    { label: "Tỉ lệ click đánh giá Google", value: pct(x.reviewClickRate), note: "Xem đánh giá 4,8★ trên Google" },
+    { label: "Tỉ lệ thoát", value: pct(x.bounceRate), note: "Càng thấp càng tốt" },
+    { label: "Thời gian trên trang", value: mmss(x.avgDurationSec), note: "Trung bình mỗi lượt" },
+    { label: "Tỉ lệ bấm Zalo / Messenger", value: pct(x.zaloClickRate), note: "Khách chủ động nhắn tin" },
+    { label: "Chi phí quảng cáo", value: money(x.totals.spend), note: label.value },
+  ];
+});
 </script>
