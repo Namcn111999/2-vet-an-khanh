@@ -31,12 +31,25 @@
 
       <!-- Dashboard -->
       <div v-else>
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-8">
           <h1 class="font-display text-2xl text-ink" style="font-weight: 600">Thống kê</h1>
-          <button @click="load" class="text-sm text-clay-dark hover:text-clay font-medium" :disabled="loading">
-            {{ loading ? "Đang tải..." : "Làm mới" }}
-          </button>
+          <div class="flex items-center gap-4">
+            <div class="inline-flex rounded-full border border-line bg-white p-1 text-sm" role="tablist">
+              <button
+                v-for="m in modes" :key="m.id" role="tab" :aria-selected="mode === m.id" @click="setMode(m.id)"
+                class="px-4 py-1.5 rounded-full transition-colors"
+                :class="mode === m.id ? 'bg-clay-dark text-paper' : 'text-ink/60 hover:text-ink'"
+              >{{ m.label }}</button>
+            </div>
+            <button v-if="mode === 'real'" @click="load" class="text-sm text-clay-dark hover:text-clay font-medium" :disabled="loading">
+              {{ loading ? "Đang tải..." : "Làm mới" }}
+            </button>
+          </div>
         </div>
+
+        <DemoDashboard v-if="mode === 'demo'" />
+
+        <template v-else>
 
         <div v-if="loading && !data" class="text-ink/50">Đang tải số liệu...</div>
 
@@ -104,6 +117,7 @@
         </div>
 
         <p v-if="loadError" class="text-sm text-red-600 mt-4">{{ loadError }}</p>
+        </template>
       </div>
     </main>
   </div>
@@ -111,6 +125,19 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import DemoDashboard from "./admin/DemoDashboard.vue";
+
+// Hai chế độ xem: "demo" = dữ liệu minh hoạ để xem trước giao diện (có dải cảnh báo luôn hiện),
+// "real" = số liệu thật từ Umami. Mặc định mở chế độ demo.
+const modes = [
+  { id: "demo", label: "Demo (dữ liệu mẫu)" },
+  { id: "real", label: "Số liệu thật" },
+];
+const mode = ref("demo");
+function setMode(id) {
+  mode.value = id;
+  if (id === "real" && !data.value) load();
+}
 
 const unlocked = ref(false);
 const passwordInput = ref("");
@@ -124,7 +151,6 @@ const loadError = ref("");
 onMounted(() => {
   if (sessionStorage.getItem("2vet_admin_unlocked") === "1") {
     unlocked.value = true;
-    load();
   }
 });
 
@@ -141,7 +167,6 @@ async function login() {
     if (result.ok) {
       unlocked.value = true;
       sessionStorage.setItem("2vet_admin_unlocked", "1");
-      load();
     } else {
       loginError.value = result.error || "Sai mật khẩu.";
     }
