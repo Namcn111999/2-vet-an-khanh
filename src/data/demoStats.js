@@ -99,13 +99,17 @@ export function createModel() {
   const last30 = days.slice(-30).reduce((s, d) => s + d.visits * FB_SHARE, 0);
   const k = MONTH_AD_SPEND / last30;
   days.forEach((d) => { d.spend = Math.round((d.visits * FB_SHARE * k) / 1000) * 1000; });
+  // bù phần làm tròn vào ngày gần nhất để 30 ngày gần nhất đúng bằng MONTH_AD_SPEND
+  const diff = MONTH_AD_SPEND - days.slice(-30).reduce((a, d) => a + d.spend, 0);
+  days[days.length - 1].spend += diff;
 
   const byKey = new Map(days.map((d) => [d.key, d]));
   return { today, first: days[0].date, days, byKey };
 }
 
 // Khoảng ngày của kỳ đang xem: "day" = 1 ngày, "week" = tuần T2–CN, "month" = tháng dương lịch
-export function periodRange(mode, anchor) {
+export function periodRange(mode, anchor, range) {
+  if (mode === "range" && range) return { start: range.start, end: range.end };
   if (mode === "day") return { start: anchor, end: anchor };
   if (mode === "week") {
     const off = (anchor.getDay() + 6) % 7;
@@ -116,8 +120,9 @@ export function periodRange(mode, anchor) {
   return { start, end: new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0) };
 }
 
-export function periodLabel(mode, anchor) {
-  const { start, end } = periodRange(mode, anchor);
+export function periodLabel(mode, anchor, range) {
+  const { start, end } = periodRange(mode, anchor, range);
+  if (mode === "range") return start.getTime() === end.getTime() ? dmy(start) : `${dm(start)} – ${dmy(end)}`;
   if (mode === "day") return `${WEEKDAY[anchor.getDay()] === "CN" ? "Chủ nhật" : "Thứ " + (anchor.getDay() + 1)}, ${dmy(anchor)}`;
   if (mode === "week") return `Tuần ${dm(start)} – ${dmy(end)}`;
   return `Tháng ${two(anchor.getMonth() + 1)}/${anchor.getFullYear()}`;
@@ -132,9 +137,17 @@ export function shiftAnchor(mode, anchor, dir) {
 const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
 const sumArr = (list, key) => Array.from({ length: 24 }, (_, h) => list.reduce((s, d) => s + d[key][h], 0));
 
-export function computePeriod(model, mode, anchorIn) {
+export function computePeriod(model, mode, anchorIn, rangeIn) {
   const anchor = startOfDay(anchorIn > model.today ? model.today : anchorIn < model.first ? model.first : anchorIn);
-  const { start, end } = periodRange(mode, anchor);
+  // khoảng tùy chọn: sắp xếp lại nếu chọn ngược, kẹp trong phạm vi dữ liệu có sẵn
+  let range = null;
+  if (mode === "range" && rangeIn) {
+    let a = startOfDay(rangeIn.start);
+    let b = startOfDay(rangeIn.end);
+    if (a > b) [a, b] = [b, a];
+    range = { start: a < model.first ? model.first : a, end: b > model.today ? model.today : b };
+  }
+  const { start, end } = periodRange(mode, anchor, range);
   const days = [];
   for (let d = start; d <= end; d = addDays(d, 1)) {
     const item = model.byKey.get(keyOf(d));
@@ -142,7 +155,12 @@ export function computePeriod(model, mode, anchorIn) {
   }
   // kỳ trước để so sánh: cùng số ngày, lùi 1 ngày / 1 tuần / 1 tháng
   const prevDays = days
-    .map((d) => model.byKey.get(keyOf(mode === "day" ? addDays(d.date, -1) : mode === "week" ? addDays(d.date, -7) : addMonths(d.date, -1))))
+    .map((d) => model.byKey.get(keyOf(
+      mode === "day" ? addDays(d.date, -1)
+      : mode === "week" ? addDays(d.date, -7)
+      : mode === "range" ? addDays(d.date, -days.length)
+      : addMonths(d.date, -1)
+    )))
     .filter(Boolean);
   const tot = (a) => ({ visitors: sum(a, (d) => d.visitors), visits: sum(a, (d) => d.visits), views: sum(a, (d) => d.views), mapClicks: sum(a, (d) => d.mapClicks), spend: sum(a, (d) => d.spend) });
   const cur = tot(days);
@@ -154,9 +172,10 @@ export function computePeriod(model, mode, anchorIn) {
   const jit = (v, span) => v * (1 + (j() - 0.5) * span);
   const mapRate = cur.visits ? cur.mapClicks / cur.visits : 0;
 
+  const single = mode === "day" || (mode === "range" && days.length === 1);
   // Biểu đồ xu hướng: ngày → 14 ngày kết thúc ở ngày đang xem; tuần/tháng → chính kỳ đó
-  const trend = mode === "day"
-    ? Array.from({ length: 14 }, (_, i) => model.byKey.get(keyOf(addDays(anchor, i - 13)))).filter(Boolean)
+  const trend = single
+    ? Array.from({ length: 14 }, (_, i) => model.byKey.get(keyOf(addDays(days[0] ? days[0].date : anchor, i - 13)))).filter(Boolean)
     : days;
   const trendLabel = (d) => (mode === "week" ? `${WEEKDAY[d.date.getDay()]} ${dm(d.date)}` : dm(d.date));
 
@@ -210,14 +229,15 @@ export function computePeriod(model, mode, anchorIn) {
 
   return {
     mode,
+    single,
     anchor,
     range: { start, end },
     hasData: days.length > 0,
     totals: cur,
     delta: { visitors: delta("visitors"), views: delta("views"), mapClicks: delta("mapClicks") },
     trend: { labels: trend.map(trendLabel), visitors: trend.map((d) => d.visitors), views: trend.map((d) => d.views) },
-    trendTitle: mode === "day" ? "14 ngày gần nhất" : mode === "week" ? "Từng ngày trong tuần" : "Từng ngày trong tháng",
-    mapSeries: mode === "day"
+    trendTitle: single ? "14 ngày kết thúc ở ngày đang xem" : mode === "week" ? "Từng ngày trong tuần" : mode === "month" ? "Từng ngày trong tháng" : "Từng ngày trong khoảng đã chọn",
+    mapSeries: single
       ? { labels: Array.from({ length: 24 }, (_, h) => `${h}h`), values: hm, unit: "giờ" }
       : { labels: days.map(trendLabel), values: days.map((d) => d.mapClicks), unit: "ngày" },
     hourlyVisits: hv,

@@ -10,20 +10,41 @@
         >{{ m.label }}</button>
       </div>
 
-      <div class="inline-flex items-center gap-1">
+      <div v-if="mode !== 'range'" class="inline-flex items-center gap-1">
         <button @click="move(-1)" :disabled="!canPrev" aria-label="Kỳ trước" class="w-9 h-9 rounded-full border border-line bg-white text-ink/70 hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed">‹</button>
         <span class="px-3 text-sm font-semibold text-clay-dark min-w-[11rem] text-center">{{ label }}</span>
         <button @click="move(1)" :disabled="!canNext" aria-label="Kỳ sau" class="w-9 h-9 rounded-full border border-line bg-white text-ink/70 hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed">›</button>
       </div>
 
-      <label class="inline-flex items-center gap-2 text-sm text-ink/60">
+      <label v-if="mode !== 'range'" class="inline-flex items-center gap-2 text-sm text-ink/60">
         <span class="hidden sm:inline">Chọn ngày</span>
         <input
           type="date" :value="dateInput" :min="minInput" :max="maxInput" @change="pickDate"
           class="rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/40"
         />
       </label>
-      <button v-if="!isCurrent" @click="anchor = model.today" class="text-sm text-clay-dark hover:text-clay font-medium">Về hôm nay</button>
+      <button v-if="mode !== 'range' && !isCurrent" @click="anchor = model.today" class="text-sm text-clay-dark hover:text-clay font-medium">Về hôm nay</button>
+
+      <!-- Khoảng thời gian tùy chọn: từ ngày – đến ngày, kèm mốc chọn nhanh -->
+      <template v-if="mode === 'range'">
+        <label class="inline-flex items-center gap-2 text-sm text-ink/60">
+          Từ
+          <input type="date" :value="toInput(rangeStart)" :min="minInput" :max="maxInput" @change="setRange('start', $event)"
+            class="rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/40" />
+        </label>
+        <label class="inline-flex items-center gap-2 text-sm text-ink/60">
+          đến
+          <input type="date" :value="toInput(rangeEnd)" :min="minInput" :max="maxInput" @change="setRange('end', $event)"
+            class="rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/40" />
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="p in presets" :key="p.days" @click="applyPreset(p.days)"
+            class="px-3 py-1.5 rounded-full border text-xs font-medium transition-colors"
+            :class="activePreset === p.days ? 'border-clay-dark bg-clay-dark text-paper' : 'border-line bg-white text-ink/60 hover:text-ink'"
+          >{{ p.label }}</button>
+        </div>
+      </template>
     </div>
 
     <!-- Thẻ tổng quan -->
@@ -92,7 +113,7 @@
     <div class="grid md:grid-cols-3 gap-4 mt-4">
       <section class="bg-white border border-line rounded-2xl p-5 md:col-span-2">
         <h3 class="font-semibold text-ink mb-1">Khung giờ khách truy cập</h3>
-        <p class="text-xs text-ink/45 mb-3">Tổng theo giờ trong {{ mode === "day" ? "ngày" : mode === "week" ? "tuần" : "tháng" }} đang xem · dùng để chọn giờ chạy quảng cáo</p>
+        <p class="text-xs text-ink/45 mb-3">Tổng theo giờ trong {{ d.single ? "ngày" : mode === "week" ? "tuần" : mode === "month" ? "tháng" : "khoảng thời gian" }} đang xem · dùng để chọn giờ chạy quảng cáo</p>
         <TrendChart
           :labels="hours"
           :series="[
@@ -174,20 +195,49 @@
 import { ref, computed } from "vue";
 import TrendChart from "./TrendChart.vue";
 import DonutChart from "./DonutChart.vue";
-import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf } from "../../data/demoStats";
+import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf, addDays, HISTORY_DAYS } from "../../data/demoStats";
 
 const model = createModel();
 const modes = [
   { id: "day", label: "Ngày" },
   { id: "week", label: "Tuần" },
   { id: "month", label: "Tháng" },
+  { id: "range", label: "Tùy chọn" },
 ];
 const mode = ref("day");
 const anchor = ref(model.today);
 
-const d = computed(() => computePeriod(model, mode.value, anchor.value));
-const label = computed(() => periodLabel(mode.value, d.value.anchor));
-const prevText = computed(() => ({ day: "hôm trước", week: "tuần trước", month: "tháng trước" }[mode.value]));
+// Khoảng tùy chọn (mặc định 30 ngày gần nhất)
+const rangeEnd = ref(model.today);
+const rangeStart = ref(addDays(model.today, -29));
+const presets = [
+  { days: 7, label: "7 ngày" },
+  { days: 14, label: "14 ngày" },
+  { days: 30, label: "30 ngày" },
+  { days: 90, label: "90 ngày" },
+  { days: HISTORY_DAYS, label: "Tất cả" },
+];
+const spanDays = computed(() => Math.round((rangeEnd.value - rangeStart.value) / 86400000) + 1);
+const activePreset = computed(() => {
+  const isToday = rangeEnd.value.getTime() === model.today.getTime();
+  const p = presets.find((x) => x.days === spanDays.value || (x.days === HISTORY_DAYS && rangeStart.value.getTime() === model.first.getTime()));
+  return isToday && p ? p.days : null;
+});
+function applyPreset(n) {
+  rangeEnd.value = model.today;
+  rangeStart.value = n >= HISTORY_DAYS ? model.first : addDays(model.today, -(n - 1));
+}
+function setRange(which, e) {
+  if (!e.target.value) return;
+  const [y, m, dd] = e.target.value.split("-").map(Number);
+  const v = new Date(y, m - 1, dd);
+  if (which === "start") { rangeStart.value = v; if (v > rangeEnd.value) rangeEnd.value = v; }
+  else { rangeEnd.value = v; if (v < rangeStart.value) rangeStart.value = v; }
+}
+
+const d = computed(() => computePeriod(model, mode.value, anchor.value, { start: rangeStart.value, end: rangeEnd.value }));
+const label = computed(() => periodLabel(mode.value, d.value.anchor, d.value.range));
+const prevText = computed(() => ({ day: "hôm trước", week: "tuần trước", month: "tháng trước", range: "kỳ trước (cùng số ngày)" }[mode.value]));
 
 // Lùi / tiến kỳ — không vượt quá hôm nay hay trước dữ liệu có sẵn
 const canNext = computed(() => periodRange(mode.value, d.value.anchor).end < model.today);
