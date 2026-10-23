@@ -15,13 +15,13 @@ const pctCell = (v) => (v === undefined || v === null ? "" : { t: "n", v, z: "0.
 const numCell = (v) => ({ t: "n", v, z: "#,##0" });
 const moneyCell = (v) => ({ t: "n", v, z: '#,##0" đ"' });
 
-function fileName(d) {
+function fileName(d, ext = "xlsx") {
   // tên file theo khoảng ngày thực sự có số liệu (không tính các ngày chưa tới)
   const start = d.rows[0].date;
   const end = d.rows[d.rows.length - 1].date;
   const span = start.getTime() === end.getTime() ? dmyFile(start) : `${dmyFile(start)}_den_${dmyFile(end)}`;
   const kind = { day: "Ngay", week: "Tuan", month: "Thang", range: "KhoangThoiGian" }[d.mode];
-  return `BaoCao_2Vet_AnKhanh_${kind}_${span}.xlsx`;
+  return `BaoCao_2Vet_AnKhanh_${kind}_${span}.${ext}`;
 }
 
 export async function exportExcel(d, label) {
@@ -110,4 +110,43 @@ export async function exportExcel(d, label) {
   ], [20, 16, 24, 24]);
 
   XLSX.writeFile(wb, fileName(d));
+}
+
+// Xuất PDF tải thẳng về: chụp vùng báo cáo rồi cắt thành các trang A4
+export async function exportPdf(el, d) {
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    backgroundColor: "#ffffff",
+    useCORS: true,
+    windowWidth: 1100,
+    ignoreElements: (n) => n.hasAttribute && n.hasAttribute("data-pdf-ignore"),
+    onclone: (doc) => {
+      doc.querySelectorAll("[data-pdf-only]").forEach((n) => {
+        n.classList.remove("hidden");
+        n.style.display = "block";
+      });
+    },
+  });
+  const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  const pw = pdf.internal.pageSize.getWidth();
+  const ph = pdf.internal.pageSize.getHeight();
+  const m = 10;
+  const w = pw - m * 2;
+  const pageH = ph - m * 2;
+  const mmPerPx = w / canvas.width;
+  const slicePx = Math.floor(pageH / mmPerPx);
+  for (let y = 0, page = 0; y < canvas.height; y += slicePx, page++) {
+    const h = Math.min(slicePx, canvas.height - y);
+    const part = document.createElement("canvas");
+    part.width = canvas.width;
+    part.height = h;
+    const ctx = part.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, part.width, part.height);
+    ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+    if (page > 0) pdf.addPage();
+    pdf.addImage(part.toDataURL("image/jpeg", 0.92), "JPEG", m, m, w, h * mmPerPx);
+  }
+  pdf.save(fileName(d, "pdf"));
 }
