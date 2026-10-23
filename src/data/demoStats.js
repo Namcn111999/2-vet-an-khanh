@@ -29,7 +29,7 @@ const SERVICE_GROUPS = [
   { label: "Spa & grooming", campaign: "Campaign 2 · Messages", share: 0.26, spend: 0.4, rate: 0.109 },
 ];
 const FB_SHARE = 0.62; // phần lượt truy cập đến từ Facebook Ads
-const MONTH_AD_SPEND = 1600000; // chi phí quảng cáo 30 ngày gần nhất
+const DAILY_AD_BUDGET = 150000; // ngân sách quảng cáo đang cài mỗi ngày
 
 export const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 export const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
@@ -96,12 +96,10 @@ export function createModel() {
     days.push({ date, key: keyOf(date), visitors, visits, views, mapClicks, hourlyVisits: hv, hourlyViews: hw, hourlyMap: hm });
   }
   // Chi phí quảng cáo theo ngày tỉ lệ với lượt truy cập từ Facebook; 30 ngày gần nhất = 1.600.000đ
-  const last30 = days.slice(-30).reduce((s, d) => s + d.visits * FB_SHARE, 0);
-  const k = MONTH_AD_SPEND / last30;
-  days.forEach((d) => { d.spend = Math.round((d.visits * FB_SHARE * k) / 1000) * 1000; });
-  // bù phần làm tròn vào ngày gần nhất để 30 ngày gần nhất đúng bằng MONTH_AD_SPEND
-  const diff = MONTH_AD_SPEND - days.slice(-30).reduce((a, d) => a + d.spend, 0);
-  days[days.length - 1].spend += diff;
+  // Chi phí quảng cáo mỗi ngày quanh ngân sách đã cài (150.000đ/ngày), Facebook chi lệch nhẹ mỗi ngày
+  const rs = rng(99);
+  days.forEach((d) => { d.spend = Math.round((DAILY_AD_BUDGET * (0.92 + rs() * 0.16)) / 1000) * 1000; });
+  days[days.length - 1].spend = DAILY_AD_BUDGET;
 
   const byKey = new Map(days.map((d) => [d.key, d]));
   return { today, first: days[0].date, days, byKey };
@@ -243,7 +241,7 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
     hourlyVisits: hv,
     hourlyViews: hw,
     mapClickRate: mapRate,
-    reviewClickRate: jit(0.064, 0.1),
+    reviewClickRate: jit(0.31, 0.12), // khách rất hay bấm xem đánh giá Google trước khi quyết định (~30%)
     zaloClickRate: jit(0.121, 0.1),
     bounceRate: jit(0.37, 0.1),
     avgDurationSec: Math.round(jit(105, 0.1)),
