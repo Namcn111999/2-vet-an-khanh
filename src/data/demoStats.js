@@ -17,8 +17,8 @@ function rng(seed) {
 
 export const HISTORY_DAYS = 150;
 const TODAY_TOTALS = { visitors: 127, visits: 138, views: 225, mapClicks: 16 };
-const TODAY_HOURLY_VISITS = [1, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2, 10, 14, 18, 8, 15, 15, 5];
-const TODAY_HOURLY_VIEWS = [1, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
+const TODAY_HOURLY_VISITS = [5, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2, 10, 14, 18, 8, 15, 15, 5];
+const TODAY_HOURLY_VIEWS = [14, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
 const HOUR_WEIGHTS = TODAY_HOURLY_VIEWS.map((v) => v + 0.4);
 const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 const FB_SHARE = 0.62; // phần lượt truy cập đến từ Facebook Ads
@@ -43,6 +43,19 @@ function distribute(total, weights, r) {
   const raw = w.map((x) => (x / sum) * total);
   const out = raw.map(Math.floor);
   let rest = total - out.reduce((s, x) => s + x, 0);
+  raw
+    .map((x, i) => [x - Math.floor(x), i])
+    .sort((a, b) => b[0] - a[0])
+    .forEach(([, i]) => { if (rest > 0) { out[i] += 1; rest -= 1; } });
+  return out;
+}
+
+// Chia total theo tỉ lệ, kết quả là số nguyên và tổng luôn đúng bằng total
+function allocate(total, shares) {
+  const sumShares = shares.reduce((a, b) => a + b, 0);
+  const raw = shares.map((x) => (x / sumShares) * total);
+  const out = raw.map(Math.floor);
+  let rest = total - out.reduce((a, b) => a + b, 0);
   raw
     .map((x, i) => [x - Math.floor(x), i])
     .sort((a, b) => b[0] - a[0])
@@ -147,18 +160,54 @@ export function computePeriod(model, mode, anchorIn) {
   const shares = [0.38, 0.29, 0.24, 0.09];
   const spendShare = [0.3375, 0.2125, 0.3625, 0.0875];
   const rates = [0.124, 0.116, 0.109, 0.112];
-  const fbVisits = Math.round(cur.visits * FB_SHARE);
+  // Nguồn truy cập: tổng các nguồn luôn bằng đúng tổng lượt truy cập của kỳ
+  const srcVals = allocate(cur.visits, [FB_SHARE, 0.14, 0.08, 0.09, 0.07]);
+  const sourceList = [
+    { name: "Facebook Ads", color: "#FFA400" },
+    { name: "Fanpage (tự nhiên)", color: "#7B391A" },
+    { name: "Zalo", color: "#C97D3D" },
+    { name: "Google", color: "#A6673C" },
+    { name: "Truy cập trực tiếp", color: "#EAD8C7" },
+  ].map((x, i) => ({ ...x, value: srcVals[i] }));
+
+  // Chiến dịch: lượt truy cập chia hết phần "Facebook Ads", chi phí chia hết tổng chi phí của kỳ
+  const fbVisits = srcVals[0];
+  const visitsBy = allocate(fbVisits, shares);
+  const spendBy = allocate(Math.round(cur.spend / 1000), spendShare).map((x) => x * 1000);
   const campaigns = [
     { name: "Campaign 1 · Messages", label: "Khám & điều trị" },
     { name: "Campaign 3 · Retargeting", label: "Tiêm phòng" },
     { name: "Campaign 2 · Messages", label: "Spa & grooming" },
     { name: "Test creative (Halloween…)", label: "Khác" },
   ].map((c, i) => {
-    const visits = Math.round(fbVisits * shares[i]);
-    const spend = Math.round((cur.spend * spendShare[i]) / 1000) * 1000;
+    const visits = visitsBy[i];
+    const spend = spendBy[i];
     const mapClicks = Math.round(visits * rates[i]);
     return { ...c, visits, mapClicks, spend, rate: visits ? mapClicks / visits : 0, cpv: visits ? Math.round(spend / visits) : 0 };
   });
+
+  // Khách click bản đồ gần đây trong kỳ đang xem: lấy từ các giờ có click, mới nhất trước
+  const areas = ["Hoài Đức, Hà Nội", "Hoài Đức, Hà Nội", "Nam Từ Liêm, Hà Nội", "Hà Đông, Hà Nội", "Thanh Xuân, Hà Nội"];
+  const svcs = ["Khám & điều trị", "Tiêm phòng", "Spa & grooming", "Khám & điều trị"];
+  const when = (dt) => {
+    const diff = Math.round((model.today - dt) / 86400000);
+    return diff === 0 ? "Hôm nay" : diff === 1 ? "Hôm qua" : dm(dt);
+  };
+  const recent = [];
+  const rr = rng(days.length ? Math.round(days[0].date.getTime() / 86400000) + 5 : 5);
+  for (let i = days.length - 1; i >= 0 && recent.length < 5; i--) {
+    for (let h = 23; h >= 0 && recent.length < 5; h--) {
+      if (days[i].hourlyMap[h] > 0) {
+        const mm = Math.floor(rr() * 60);
+        recent.push({
+          time: `${when(days[i].date)} ${two(h)}:${two(mm)}`,
+          device: rr() < 0.84 ? "Điện thoại" : "Máy tính",
+          area: areas[Math.floor(rr() * areas.length)],
+          source: svcs[Math.floor(rr() * svcs.length)],
+        });
+      }
+    }
+  }
 
   return {
     mode,
@@ -179,13 +228,7 @@ export function computePeriod(model, mode, anchorIn) {
     zaloClickRate: jit(0.121, 0.1),
     bounceRate: jit(0.37, 0.1),
     avgDurationSec: Math.round(jit(105, 0.1)),
-    sources: [
-      { name: "Facebook Ads", value: Math.round(cur.visits * FB_SHARE), color: "#FFA400" },
-      { name: "Fanpage (tự nhiên)", value: Math.round(cur.visits * 0.14), color: "#7B391A" },
-      { name: "Zalo", value: Math.round(cur.visits * 0.08), color: "#C97D3D" },
-      { name: "Google", value: Math.round(cur.visits * 0.09), color: "#A6673C" },
-      { name: "Truy cập trực tiếp", value: Math.round(cur.visits * 0.07), color: "#EAD8C7" },
-    ],
+    sources: sourceList,
     devices: [
       { name: "Điện thoại", value: 0.84 },
       { name: "Máy tính", value: 0.14 },
@@ -198,12 +241,6 @@ export function computePeriod(model, mode, anchorIn) {
       { name: "Khác", value: 9 },
     ],
     campaigns,
-    recentMapClicks: [
-      { time: "Hôm nay 09:42", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "Spa & grooming" },
-      { time: "Hôm nay 08:15", device: "Điện thoại", area: "Nam Từ Liêm, Hà Nội", source: "Khám & điều trị" },
-      { time: "Hôm qua 20:31", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "Spa & grooming" },
-      { time: "Hôm qua 17:08", device: "Máy tính", area: "Hà Đông, Hà Nội", source: "Tiêm phòng" },
-      { time: "Hôm qua 11:54", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "Tiêm phòng" },
-    ],
+    recentMapClicks: recent,
   };
 }

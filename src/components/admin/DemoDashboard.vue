@@ -35,6 +35,7 @@
           {{ k.delta >= 0 ? "▲" : "▼" }} {{ Math.abs(Math.round(k.delta * 100)) }}% so với {{ prevText }}
         </p>
         <p v-else class="text-xs mt-1.5 text-ink/40">{{ k.note }}</p>
+        <p v-if="k.sub" class="text-xs mt-0.5 text-ink/40">{{ k.sub }}</p>
       </div>
     </div>
 
@@ -141,13 +142,24 @@
               <td class="py-3 px-1 text-right font-semibold">{{ money(c.cpv) }}</td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr class="border-t-2 border-line font-semibold text-ink">
+              <td class="py-3 px-1">Tổng quảng cáo</td>
+              <td class="py-3 px-1 text-right">{{ campTotal.visits.toLocaleString("vi-VN") }}</td>
+              <td class="py-3 px-1 text-right text-clay-dark">{{ campTotal.mapClicks.toLocaleString("vi-VN") }}</td>
+              <td class="py-3 px-1 text-right">{{ pct(campTotal.visits ? campTotal.mapClicks / campTotal.visits : 0) }}</td>
+              <td class="py-3 px-1 text-right">{{ money(campTotal.spend) }}</td>
+              <td class="py-3 px-1 text-right">{{ money(campTotal.visits ? Math.round(campTotal.spend / campTotal.visits) : 0) }}</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </section>
 
     <!-- Khách click bản đồ gần đây -->
     <section class="bg-white border border-line rounded-2xl p-5 mt-4">
-      <h3 class="font-semibold text-ink mb-4">Khách click vào bản đồ gần đây</h3>
+      <h3 class="font-semibold text-ink mb-4">Khách click vào bản đồ gần đây <span class="text-xs font-normal text-ink/40">· {{ label }}</span></h3>
+      <p v-if="!d.recentMapClicks.length" class="text-sm text-ink/50">Chưa có lượt click nào trong kỳ này.</p>
       <ul class="divide-y divide-line/60">
         <li v-for="l in d.recentMapClicks" :key="l.time + l.area" class="py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
           <div><p class="font-semibold text-ink text-sm">{{ l.area }}</p><p class="text-xs text-ink/45">{{ l.device }} · {{ l.time }}</p></div>
@@ -195,6 +207,11 @@ function pickDate(e) {
   anchor.value = new Date(y, m - 1, dd);
 }
 
+const campTotal = computed(() => ({
+  visits: d.value.campaigns.reduce((s, c) => s + c.visits, 0),
+  mapClicks: d.value.campaigns.reduce((s, c) => s + c.mapClicks, 0),
+  spend: d.value.campaigns.reduce((s, c) => s + c.spend, 0),
+}));
 const hours = Array.from({ length: 24 }, (_, h) => `${h}h`);
 const pct = (v) => `${(v * 100).toFixed(1).replace(".", ",")}%`;
 const money = (v) => `${v.toLocaleString("vi-VN")}đ`;
@@ -210,7 +227,7 @@ const interactions = computed(() => [
 const kpis = computed(() => {
   const x = d.value;
   return [
-    { label: "Người truy cập", value: x.totals.visitors.toLocaleString("vi-VN"), delta: x.delta.visitors },
+    { label: "Người truy cập", value: x.totals.visitors.toLocaleString("vi-VN"), delta: x.delta.visitors, sub: `${x.totals.visits.toLocaleString("vi-VN")} lượt truy cập` },
     { label: "Lượt xem trang", value: x.totals.views.toLocaleString("vi-VN"), delta: x.delta.views },
     { label: "Tỉ lệ click vào bản đồ", value: pct(x.mapClickRate), delta: x.delta.mapClicks },
     { label: "Tỉ lệ click đánh giá Google", value: pct(x.reviewClickRate), note: "Xem đánh giá 4,8★ trên Google" },
