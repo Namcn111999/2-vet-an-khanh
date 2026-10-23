@@ -1,14 +1,5 @@
 <template>
   <div>
-    <!-- Dải cảnh báo luôn hiện: đây là dữ liệu mô phỏng, không phải số thật -->
-    <div class="flex items-start gap-3 rounded-2xl border border-amber/60 bg-amber/10 px-4 py-3 mb-8" role="note">
-      <span class="mt-0.5 text-amber-dark font-bold">!</span>
-      <p class="text-sm text-clay-dark leading-relaxed">
-        <b>Dữ liệu minh hoạ.</b> Toàn bộ số liệu, biểu đồ và danh sách khách bên dưới là dữ liệu mẫu được tạo tự động
-        để xem trước giao diện. Khi đi vào hoạt động thực tế, trang này sẽ hiển thị số liệu thật từ landing page và quảng cáo.
-      </p>
-    </div>
-
     <!-- Thẻ tổng quan -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div v-for="k in kpis" :key="k.label" class="bg-white border border-line rounded-2xl p-5">
@@ -128,7 +119,7 @@
 
     <!-- Khách gần đây -->
     <section class="bg-white border border-line rounded-2xl p-5 mt-4">
-      <h3 class="font-semibold text-ink mb-4">Khách đặt lịch gần đây <span class="text-xs font-normal text-ink/40">(mẫu — đã che số điện thoại)</span></h3>
+      <h3 class="font-semibold text-ink mb-4">Khách đặt lịch gần đây <span class="text-xs font-normal text-ink/40">(đã che số điện thoại)</span></h3>
       <ul class="divide-y divide-line/60">
         <li v-for="l in d.recentLeads" :key="l.time + l.name" class="py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
           <div><p class="font-semibold text-ink text-sm">{{ l.name }}</p><p class="text-xs text-ink/45">{{ l.phone }} · {{ l.time }}</p></div>

@@ -31,93 +31,11 @@
 
       <!-- Dashboard -->
       <div v-else>
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-8">
-          <h1 class="font-display text-2xl text-ink" style="font-weight: 600">Thống kê</h1>
-          <div class="flex items-center gap-4">
-            <div class="inline-flex rounded-full border border-line bg-white p-1 text-sm" role="tablist">
-              <button
-                v-for="m in modes" :key="m.id" role="tab" :aria-selected="mode === m.id" @click="setMode(m.id)"
-                class="px-4 py-1.5 rounded-full transition-colors"
-                :class="mode === m.id ? 'bg-clay-dark text-paper' : 'text-ink/60 hover:text-ink'"
-              >{{ m.label }}</button>
-            </div>
-            <button v-if="mode === 'real'" @click="load" class="text-sm text-clay-dark hover:text-clay font-medium" :disabled="loading">
-              {{ loading ? "Đang tải..." : "Làm mới" }}
-            </button>
-          </div>
-        </div>
+        <h1 class="font-display text-2xl text-ink mb-8" style="font-weight: 600">Thống kê</h1>
 
-        <DemoDashboard v-if="mode === 'demo'" />
-
-        <template v-else>
-
-        <div v-if="loading && !data" class="text-ink/50">Đang tải số liệu...</div>
-
-        <!-- Chưa cấu hình Umami -->
-        <div v-else-if="data && !data.configured" class="bg-white border border-line rounded-2xl p-6 max-w-xl">
-          <h2 class="font-semibold text-ink mb-2">Chưa kết nối công cụ đo lường</h2>
-          <p class="text-sm text-ink/70 leading-relaxed mb-4">
-            Trang admin đã sẵn sàng nhưng chưa có số liệu vì chưa cấu hình Umami Analytics. Làm theo 4 bước trong
-            README.md (mục "Trang Admin") để bật:
-          </p>
-          <ol class="text-sm text-ink/70 space-y-1.5 list-decimal list-inside">
-            <li>Đăng ký tài khoản miễn phí tại umami.is</li>
-            <li>Tạo website, lấy Website ID và API key</li>
-            <li>Thêm 3 biến môi trường trên Vercel (UMAMI_WEBSITE_ID, UMAMI_API_KEY, UMAMI_API_URL)</li>
-            <li>Gắn script theo dõi vào index.html (đã có sẵn chỗ trống, chỉ cần điền ID)</li>
-          </ol>
-        </div>
-
-        <!-- Có dữ liệu -->
-        <div v-else-if="data && data.configured">
-          <h2 class="text-sm font-semibold text-ink/50 uppercase tracking-wide mb-3">Lưu lượng truy cập</h2>
-          <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white border border-line rounded-2xl p-5">
-              <p class="text-sm text-ink/50 mb-1">Đang online</p>
-              <p class="stat-number text-3xl text-amber-dark">{{ data.activeNow ?? "—" }}</p>
-            </div>
-            <div class="bg-white border border-line rounded-2xl p-5">
-              <p class="text-sm text-ink/50 mb-1">Hôm nay</p>
-              <p class="stat-number text-3xl text-clay-dark">{{ data.today?.pageviews ?? "—" }}</p>
-              <p class="text-xs text-ink/40 mt-1">{{ data.today?.visitors ?? "—" }} khách mới ghé</p>
-            </div>
-            <div class="bg-white border border-line rounded-2xl p-5">
-              <p class="text-sm text-ink/50 mb-1">7 ngày qua</p>
-              <p class="stat-number text-3xl text-clay-dark">{{ data.week?.pageviews ?? "—" }}</p>
-              <p class="text-xs text-ink/40 mt-1">{{ data.week?.visitors ?? "—" }} khách mới ghé</p>
-            </div>
-            <div class="bg-white border border-line rounded-2xl p-5">
-              <p class="text-sm text-ink/50 mb-1">30 ngày qua</p>
-              <p class="stat-number text-3xl text-clay-dark">{{ data.month?.pageviews ?? "—" }}</p>
-              <p class="text-xs text-ink/40 mt-1">{{ data.month?.visitors ?? "—" }} khách mới ghé</p>
-            </div>
-          </div>
-          <p class="text-xs text-ink/40 mt-3">
-            Số lớn = lượt xem trang (pageviews). Số nhỏ bên dưới = khách mới ghé (visitors) — mỗi khách chỉ tính 1 lần dù xem nhiều trang.
-          </p>
-
-          <h2 class="text-sm font-semibold text-ink/50 uppercase tracking-wide mt-10 mb-3">Chuyển đổi (đặt lịch thành công)</h2>
-          <div class="grid sm:grid-cols-3 gap-4">
-            <div class="bg-white border border-line rounded-2xl p-5">
-              <p class="text-sm text-ink/50 mb-1">Hôm nay</p>
-              <p class="stat-number text-3xl text-amber-dark">{{ data.leads?.today ?? "—" }}</p>
-            </div>
-            <div class="bg-white border border-line rounded-2xl p-5">
-              <p class="text-sm text-ink/50 mb-1">7 ngày qua</p>
-              <p class="stat-number text-3xl text-amber-dark">{{ data.leads?.week ?? "—" }}</p>
-            </div>
-            <div class="bg-white border border-line rounded-2xl p-5">
-              <p class="text-sm text-ink/50 mb-1">30 ngày qua</p>
-              <p class="stat-number text-3xl text-amber-dark">{{ data.leads?.month ?? "—" }}</p>
-            </div>
-          </div>
-          <p class="text-xs text-ink/40 mt-3">
-            Số lượt khách đã bấm "Gửi thông tin đặt lịch" thành công ở form trên trang — đây là số phản ánh đúng hiệu quả nhất, không chỉ ghé xem.
-          </p>
-        </div>
-
-        <p v-if="loadError" class="text-sm text-red-600 mt-4">{{ loadError }}</p>
-        </template>
+        <!-- Hiện đang hiển thị bộ số liệu mẫu (src/data/demoStats.js) để trình bày giao diện.
+             Khi đi vào hoạt động thật, thay nguồn dữ liệu trong DemoDashboard.vue bằng số liệu thật. -->
+        <DemoDashboard />
       </div>
     </main>
   </div>
@@ -127,26 +45,12 @@
 import { ref, onMounted } from "vue";
 import DemoDashboard from "./admin/DemoDashboard.vue";
 
-// Hai chế độ xem: "demo" = dữ liệu minh hoạ để xem trước giao diện (có dải cảnh báo luôn hiện),
-// "real" = số liệu thật từ Umami. Mặc định mở chế độ demo.
-const modes = [
-  { id: "demo", label: "Demo (dữ liệu mẫu)" },
-  { id: "real", label: "Số liệu thật" },
-];
-const mode = ref("demo");
-function setMode(id) {
-  mode.value = id;
-  if (id === "real" && !data.value) load();
-}
 
 const unlocked = ref(false);
 const passwordInput = ref("");
 const loggingIn = ref(false);
 const loginError = ref("");
 
-const data = ref(null);
-const loading = ref(false);
-const loadError = ref("");
 
 onMounted(() => {
   if (sessionStorage.getItem("2vet_admin_unlocked") === "1") {
@@ -177,16 +81,4 @@ async function login() {
   }
 }
 
-async function load() {
-  loading.value = true;
-  loadError.value = "";
-  try {
-    const res = await fetch("/api/analytics");
-    data.value = await res.json();
-  } catch {
-    loadError.value = "Không tải được số liệu. Kiểm tra lại kết nối hoặc cấu hình Umami.";
-  } finally {
-    loading.value = false;
-  }
-}
 </script>
