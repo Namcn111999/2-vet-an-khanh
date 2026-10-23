@@ -84,3 +84,11 @@ body {
     transition: none;
   }
 }
+
+/* In / lưu PDF báo cáo ở trang /admin: giữ màu nền, không cắt đôi các khối biểu đồ */
+@media print {
+  @page { margin: 12mm; }
+  html, body { background: #fff !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  section, .stat-number { break-inside: avoid; }
+}

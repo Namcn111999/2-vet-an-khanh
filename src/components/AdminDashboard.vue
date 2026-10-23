@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-tan/40 flex flex-col">
-    <header class="bg-white border-b border-line">
+  <div class="min-h-screen bg-tan/40 print:bg-white flex flex-col">
+    <header class="bg-white border-b border-line print:hidden">
       <div class="max-w-content mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <img src="/images/logo-mark.png" alt="" class="h-8 w-8 object-contain" />
@@ -10,7 +10,7 @@
       </div>
     </header>
 
-    <main class="flex-1 max-w-content w-full mx-auto px-5 md:px-8 py-10">
+    <main class="flex-1 max-w-content w-full mx-auto px-5 md:px-8 py-10 print:py-0 print:px-0">
       <!-- Màn hình nhập mật khẩu -->
       <div v-if="!unlocked" class="max-w-sm mx-auto mt-16">
         <h1 class="font-display text-2xl text-ink mb-2" style="font-weight: 600">Đăng nhập quản trị</h1>
@@ -31,7 +31,7 @@
 
       <!-- Dashboard -->
       <div v-else>
-        <h1 class="font-display text-2xl text-ink mb-8" style="font-weight: 600">Thống kê</h1>
+        <h1 class="font-display text-2xl text-ink mb-8 print:hidden" style="font-weight: 600">Thống kê</h1>
 
         <!-- Hiện đang hiển thị bộ số liệu mẫu (src/data/demoStats.js) để trình bày giao diện.
              Khi đi vào hoạt động thật, thay nguồn dữ liệu trong DemoDashboard.vue bằng số liệu thật. -->

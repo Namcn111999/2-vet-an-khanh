@@ -1,7 +1,13 @@
 <template>
   <div>
     <!-- Chọn kỳ xem: Ngày / Tuần / Tháng, lùi-tiến kỳ và chọn ngày cụ thể -->
-    <div class="flex flex-wrap items-center gap-3 mb-6">
+    <!-- Tiêu đề chỉ hiện khi in / lưu PDF -->
+    <div class="hidden print:block mb-6">
+      <h2 class="font-display text-2xl text-clay-dark" style="font-weight: 600">Báo cáo hoạt động landing page – 2Vet An Khánh</h2>
+      <p class="text-sm text-ink/60 mt-1">Kỳ báo cáo: {{ label }} ({{ d.rows.length }} ngày) · Xuất lúc {{ nowText }}</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3 mb-6 print:hidden">
       <div class="inline-flex rounded-full border border-line bg-white p-1 text-sm" role="tablist" aria-label="Khoảng thời gian">
         <button
           v-for="m in modes" :key="m.id" role="tab" :aria-selected="mode === m.id" @click="mode = m.id"
@@ -45,6 +51,25 @@
           >{{ p.label }}</button>
         </div>
       </template>
+
+      <!-- Xuất báo cáo theo đúng kỳ đang xem -->
+      <div class="relative ml-auto" ref="exportEl">
+        <button
+          @click="exportOpen = !exportOpen" :disabled="exporting" aria-haspopup="menu" :aria-expanded="exportOpen"
+          class="btn-primary !py-2 !px-5 text-sm"
+        >
+          {{ exporting ? "Đang xuất..." : "Xuất báo cáo" }} <span aria-hidden="true">▾</span>
+        </button>
+        <div v-if="exportOpen" role="menu" class="absolute right-0 mt-2 w-64 rounded-2xl border border-line bg-white shadow-lg p-2 z-20">
+          <p class="px-3 pt-1 pb-2 text-xs text-ink/45">Báo cáo theo kỳ đang xem:<br /><b class="text-clay-dark">{{ label }}</b></p>
+          <button role="menuitem" @click="doExcel" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-tan text-sm text-ink">
+            Excel (.xlsx)<span class="block text-xs text-ink/45">Đầy đủ số liệu, nhiều trang tính</span>
+          </button>
+          <button role="menuitem" @click="doPdf" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-tan text-sm text-ink">
+            PDF (in / lưu thành PDF)<span class="block text-xs text-ink/45">Giữ nguyên biểu đồ như trên màn hình</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Thẻ tổng quan -->
@@ -142,7 +167,7 @@
       <h3 class="font-semibold text-ink mb-1">Hiệu quả theo chiến dịch quảng cáo</h3>
       <p class="text-xs text-ink/45 mb-4">Theo từng nhóm dịch vụ quảng cáo, khớp với mục "Dịch vụ khách quan tâm"</p>
       <div class="overflow-x-auto -mx-1">
-        <table class="w-full text-sm min-w-[640px]">
+        <table class="w-full text-sm min-w-[640px] print:min-w-0 print:text-xs">
           <thead>
             <tr class="text-left text-ink/50 border-b border-line">
               <th class="py-2 px-1 font-medium">Chiến dịch</th>
@@ -192,7 +217,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { exportExcel } from "./exportReport";
 import TrendChart from "./TrendChart.vue";
 import DonutChart from "./DonutChart.vue";
 import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf, addDays } from "../../data/demoStats";
@@ -262,6 +288,30 @@ const campTotal = computed(() => ({
   mapClicks: d.value.campaigns.reduce((s, c) => s + c.mapClicks, 0),
   spend: d.value.campaigns.reduce((s, c) => s + c.spend, 0),
 }));
+// Xuất báo cáo
+const exportOpen = ref(false);
+const exporting = ref(false);
+const exportEl = ref(null);
+const nowText = new Date().toLocaleString("vi-VN");
+async function doExcel() {
+  exportOpen.value = false;
+  exporting.value = true;
+  try {
+    await exportExcel(d.value, label.value);
+  } finally {
+    exporting.value = false;
+  }
+}
+function doPdf() {
+  exportOpen.value = false;
+  setTimeout(() => window.print(), 50);
+}
+function closeOnOutside(e) {
+  if (exportEl.value && !exportEl.value.contains(e.target)) exportOpen.value = false;
+}
+onMounted(() => document.addEventListener("click", closeOnOutside));
+onBeforeUnmount(() => document.removeEventListener("click", closeOnOutside));
+
 const hours = Array.from({ length: 24 }, (_, h) => `${h}h`);
 const pct = (v) => `${(v * 100).toFixed(1).replace(".", ",")}%`;
 const money = (v) => `${v.toLocaleString("vi-VN")}đ`;

@@ -247,7 +247,9 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
     range: { start, end },
     hasData: days.length > 0,
     totals: cur,
-    delta: { visitors: delta("visitors"), views: delta("views"), mapClicks: delta("mapClicks") },
+    delta: { visitors: delta("visitors"), visits: delta("visits"), views: delta("views"), mapClicks: delta("mapClicks"), spend: delta("spend") },
+    // số liệu từng ngày trong kỳ — dùng cho báo cáo xuất file
+    rows: days.map((d) => ({ date: d.date, visitors: d.visitors, visits: d.visits, views: d.views, mapClicks: d.mapClicks, spend: d.spend })),
     trend: { labels: trend.map(trendLabel), visitors: trend.map((d) => d.visitors), views: trend.map((d) => d.views) },
     trendTitle: single ? "14 ngày kết thúc ở ngày đang xem" : mode === "week" ? "Từng ngày trong tuần" : mode === "month" ? "Từng ngày trong tháng" : "Từng ngày trong khoảng đã chọn",
     mapSeries: single
