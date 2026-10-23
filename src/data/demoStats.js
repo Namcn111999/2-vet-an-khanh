@@ -41,13 +41,20 @@ export function buildDemo() {
   const cur = tot(daily);
   const before = tot(prev);
 
-  // Tổng chi phí quảng cáo ~1.6 triệu đồng
-  const campaigns = [
-    { name: "GIAOMUA1015", label: "Phòng bệnh giao mùa", visits: 612, mapClicks: 71, spend: 420000 },
-    { name: "PHUNU2010", label: "Món quà phái đẹp 20/10", visits: 538, mapClicks: 68, spend: 480000 },
-    { name: "HALLOWEEN3110", label: "Halloween cùng Boss", visits: 441, mapClicks: 49, spend: 400000 },
-    { name: "TIEMPHONG", label: "Tiêm phòng & định kỳ", visits: 297, mapClicks: 30, spend: 300000 },
-  ].map((c) => ({ ...c, rate: c.mapClicks / c.visits, cpv: Math.round(c.spend / c.visits) }));
+  // Chiến dịch khớp với 4 nhóm dịch vụ ở mục "Dịch vụ khách quan tâm" (cùng tỉ lệ 38/29/24/9)
+  // và với cấu trúc chiến dịch trong kế hoạch ads tháng 10. Tổng chi phí quảng cáo = 1.600.000đ.
+  // Lượt truy cập chia theo đúng tỉ lệ của nguồn "Facebook Ads" (62% tổng lượt truy cập).
+  const fbVisits = Math.round(cur.visits * 0.62);
+    const campaigns = [
+    { name: "Campaign 1 · Messages", label: "Khám & điều trị", share: 0.38, rate: 0.124, spend: 540000 },
+    { name: "Campaign 3 · Retargeting", label: "Tiêm phòng", share: 0.29, rate: 0.116, spend: 340000 },
+    { name: "Campaign 2 · Messages", label: "Spa & grooming", share: 0.24, rate: 0.109, spend: 580000 },
+    { name: "Test creative (Halloween…)", label: "Khác", share: 0.09, rate: 0.112, spend: 140000 },
+  ].map((c) => {
+    const visits = Math.round(fbVisits * c.share);
+    const mapClicks = Math.round(visits * c.rate);
+    return { ...c, visits, mapClicks, cpv: Math.round(c.spend / visits) };
+  });
 
   const hourly = [1, 0, 0, 0, 1, 2, 5, 14, 26, 31, 34, 38, 29, 22, 27, 30, 28, 33, 41, 46, 44, 32, 15, 6];
 
@@ -67,11 +74,11 @@ export function buildDemo() {
     reviewClickRate: 0.064,
     zaloClickRate: 0.121,
     sources: [
-      { name: "Facebook Ads", value: 1888, color: "#FFA400" },
-      { name: "Fanpage (tự nhiên)", value: 425, color: "#7B391A" },
-      { name: "Zalo", value: 247, color: "#C97D3D" },
-      { name: "Google", value: 268, color: "#A6673C" },
-      { name: "Truy cập trực tiếp", value: 193, color: "#EAD8C7" },
+      { name: "Facebook Ads", value: Math.round(cur.visits * 0.62), color: "#FFA400" },
+      { name: "Fanpage (tự nhiên)", value: Math.round(cur.visits * 0.14), color: "#7B391A" },
+      { name: "Zalo", value: Math.round(cur.visits * 0.08), color: "#C97D3D" },
+      { name: "Google", value: Math.round(cur.visits * 0.09), color: "#A6673C" },
+      { name: "Truy cập trực tiếp", value: Math.round(cur.visits * 0.07), color: "#EAD8C7" },
     ],
     devices: [
       { name: "Điện thoại", value: 0.84 },
@@ -93,11 +100,11 @@ export function buildDemo() {
       { name: "Cuộn tới cuối trang", rate: 0.31 },
     ],
     recentMapClicks: [
-      { time: "Hôm nay 09:42", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "PHUNU2010" },
-      { time: "Hôm nay 08:15", device: "Điện thoại", area: "Nam Từ Liêm, Hà Nội", source: "GIAOMUA1015" },
-      { time: "Hôm qua 20:31", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "PHUNU2010" },
-      { time: "Hôm qua 17:08", device: "Máy tính", area: "Hà Đông, Hà Nội", source: "Facebook" },
-      { time: "Hôm qua 11:54", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "HALLOWEEN3110" },
+      { time: "Hôm nay 09:42", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "Spa & grooming" },
+      { time: "Hôm nay 08:15", device: "Điện thoại", area: "Nam Từ Liêm, Hà Nội", source: "Khám & điều trị" },
+      { time: "Hôm qua 20:31", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "Spa & grooming" },
+      { time: "Hôm qua 17:08", device: "Máy tính", area: "Hà Đông, Hà Nội", source: "Tiêm phòng" },
+      { time: "Hôm qua 11:54", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "Tiêm phòng" },
     ],
   };
 }

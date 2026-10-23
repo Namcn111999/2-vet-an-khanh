@@ -89,7 +89,7 @@
     <!-- Chiến dịch -->
     <section class="bg-white border border-line rounded-2xl p-5 mt-4">
       <h3 class="font-semibold text-ink mb-1">Hiệu quả theo chiến dịch quảng cáo</h3>
-      <p class="text-xs text-ink/45 mb-4">Đối chiếu theo mã UTM gắn trên link quảng cáo</p>
+      <p class="text-xs text-ink/45 mb-4">Theo từng nhóm dịch vụ quảng cáo, khớp với mục "Dịch vụ khách quan tâm"</p>
       <div class="overflow-x-auto -mx-1">
         <table class="w-full text-sm min-w-[640px]">
           <thead>
@@ -122,7 +122,7 @@
       <ul class="divide-y divide-line/60">
         <li v-for="l in d.recentMapClicks" :key="l.time + l.area" class="py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
           <div><p class="font-semibold text-ink text-sm">{{ l.area }}</p><p class="text-xs text-ink/45">{{ l.device }} · {{ l.time }}</p></div>
-          <p class="text-xs text-ink/40">Nguồn: {{ l.source }}</p>
+          <p class="text-xs text-ink/40">Dịch vụ quảng cáo: {{ l.source }}</p>
         </li>
       </ul>
     </section>
