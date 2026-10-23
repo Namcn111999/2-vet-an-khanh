@@ -26,8 +26,8 @@ function series(seed, base, growth) {
     const visitors = Math.round((base + growth * i) * weekend * (0.85 + r() * 0.3));
     const visits = Math.round(visitors * (1.08 + r() * 0.06));
     const views = Math.round(visits * (1.25 + r() * 0.2));
-    const leads = Math.round(visits * (0.028 + r() * 0.02));
-    out.push({ label: fmt(d), visitors, visits, views, leads });
+    const mapClicks = Math.round(visits * (0.09 + r() * 0.06));
+    out.push({ label: fmt(d), visitors, visits, views, mapClicks });
   }
   return out;
 }
@@ -37,16 +37,17 @@ const sum = (arr, k) => arr.reduce((s, x) => s + x[k], 0);
 export function buildDemo() {
   const daily = series(7, 38, 1.9);
   const prev = series(21, 30, 1.4);
-  const tot = (a) => ({ visitors: sum(a, "visitors"), visits: sum(a, "visits"), views: sum(a, "views"), leads: sum(a, "leads") });
+  const tot = (a) => ({ visitors: sum(a, "visitors"), visits: sum(a, "visits"), views: sum(a, "views"), mapClicks: sum(a, "mapClicks") });
   const cur = tot(daily);
   const before = tot(prev);
 
+  // Tổng chi phí quảng cáo ~1.6 triệu đồng
   const campaigns = [
-    { name: "GIAOMUA1015", label: "Phòng bệnh giao mùa", visits: 612, leads: 24, spend: 1450000 },
-    { name: "PHUNU2010", label: "Món quà phái đẹp 20/10", visits: 538, leads: 27, spend: 1620000 },
-    { name: "HALLOWEEN3110", label: "Halloween cùng Boss", visits: 441, leads: 19, spend: 1180000 },
-    { name: "TIEMPHONG", label: "Tiêm phòng & định kỳ", visits: 297, leads: 11, spend: 910000 },
-  ].map((c) => ({ ...c, cvr: c.leads / c.visits, cpl: Math.round(c.spend / c.leads) }));
+    { name: "GIAOMUA1015", label: "Phòng bệnh giao mùa", visits: 612, mapClicks: 71, spend: 420000 },
+    { name: "PHUNU2010", label: "Món quà phái đẹp 20/10", visits: 538, mapClicks: 68, spend: 480000 },
+    { name: "HALLOWEEN3110", label: "Halloween cùng Boss", visits: 441, mapClicks: 49, spend: 400000 },
+    { name: "TIEMPHONG", label: "Tiêm phòng & định kỳ", visits: 297, mapClicks: 30, spend: 300000 },
+  ].map((c) => ({ ...c, rate: c.mapClicks / c.visits, cpv: Math.round(c.spend / c.visits) }));
 
   const hourly = [1, 0, 0, 0, 1, 2, 5, 14, 26, 31, 34, 38, 29, 22, 27, 30, 28, 33, 41, 46, 44, 32, 15, 6];
 
@@ -58,10 +59,13 @@ export function buildDemo() {
       visitors: cur.visitors / before.visitors - 1,
       visits: cur.visits / before.visits - 1,
       views: cur.views / before.views - 1,
-      leads: cur.leads / before.leads - 1,
+      mapClicks: cur.mapClicks / before.mapClicks - 1,
     },
-    bounceRate: 0.58,
+    bounceRate: 0.37,
     avgDurationSec: 96,
+    mapClickRate: 0.118,
+    reviewClickRate: 0.064,
+    zaloClickRate: 0.121,
     sources: [
       { name: "Facebook Ads", value: 1888, color: "#FFA400" },
       { name: "Fanpage (tự nhiên)", value: 425, color: "#7B391A" },
@@ -82,18 +86,18 @@ export function buildDemo() {
       { name: "Khác", value: 9 },
     ],
     campaigns,
-    funnel: [
-      { name: "Lượt truy cập", value: cur.visits },
-      { name: "Cuộn tới form đặt lịch", value: Math.round(cur.visits * 0.31) },
-      { name: "Bấm Zalo / Messenger", value: Math.round(cur.visits * 0.12) },
-      { name: "Gửi form đặt lịch", value: cur.leads },
+    interactions: [
+      { name: "Bấm Zalo / Messenger", rate: 0.121 },
+      { name: "Click vào bản đồ", rate: 0.118 },
+      { name: "Click xem đánh giá Google", rate: 0.064 },
+      { name: "Cuộn tới cuối trang", rate: 0.31 },
     ],
-    recentLeads: [
-      { time: "Hôm nay 09:42", name: "Nguyễn Thu H.", phone: "096x xxx 118", service: "Tiêm phòng", source: "PHUNU2010" },
-      { time: "Hôm nay 08:15", name: "Trần Minh Q.", phone: "090x xxx 427", service: "Khám & điều trị", source: "GIAOMUA1015" },
-      { time: "Hôm qua 20:31", name: "Lê Phương A.", phone: "098x xxx 205", service: "Spa & grooming", source: "PHUNU2010" },
-      { time: "Hôm qua 17:08", name: "Phạm Đức T.", phone: "091x xxx 763", service: "Khám & điều trị", source: "Facebook" },
-      { time: "Hôm qua 11:54", name: "Đỗ Khánh L.", phone: "093x xxx 340", service: "Tiêm phòng", source: "HALLOWEEN3110" },
+    recentMapClicks: [
+      { time: "Hôm nay 09:42", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "PHUNU2010" },
+      { time: "Hôm nay 08:15", device: "Điện thoại", area: "Nam Từ Liêm, Hà Nội", source: "GIAOMUA1015" },
+      { time: "Hôm qua 20:31", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "PHUNU2010" },
+      { time: "Hôm qua 17:08", device: "Máy tính", area: "Hà Đông, Hà Nội", source: "Facebook" },
+      { time: "Hôm qua 11:54", device: "Điện thoại", area: "Hoài Đức, Hà Nội", source: "HALLOWEEN3110" },
     ],
   };
 }

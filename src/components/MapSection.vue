@@ -32,7 +32,7 @@
         ></iframe>
       </div>
       <a
-        href="https://www.google.com/maps/place/B%E1%BB%87nh+vi%E1%BB%87n+th%C3%BA+y+2Vet+An+Kh%C3%A1nh/@21.0058754,105.7307084,17z/data=!3m1!4b1!4m6!3m5!1s0x3134534856d051a7:0x3dae2d9f362187f9!8m2!3d21.0058704!4d105.7332833!16s%2Fg%2F11mkff4l35"
+        data-umami-event="click_ban_do" href="https://www.google.com/maps/place/B%E1%BB%87nh+vi%E1%BB%87n+th%C3%BA+y+2Vet+An+Kh%C3%A1nh/@21.0058754,105.7307084,17z/data=!3m1!4b1!4m6!3m5!1s0x3134534856d051a7:0x3dae2d9f362187f9!8m2!3d21.0058704!4d105.7332833!16s%2Fg%2F11mkff4l35"
         target="_blank"
         rel="noopener"
         class="inline-flex items-center gap-1.5 text-sm text-clay-dark font-medium mt-3 hover:text-clay"

@@ -35,30 +35,29 @@
 
     <div class="grid lg:grid-cols-3 gap-4 mt-4">
       <section class="lg:col-span-2 bg-white border border-line rounded-2xl p-5">
-        <h3 class="font-semibold text-ink mb-1">Khách đặt lịch theo ngày</h3>
-        <p class="text-xs text-ink/45 mb-3">Số lượt gửi form đặt lịch thành công</p>
+        <h3 class="font-semibold text-ink mb-1">Lượt click vào bản đồ theo ngày</h3>
+        <p class="text-xs text-ink/45 mb-3">Khách bấm xem đường đi tới phòng khám</p>
         <TrendChart
           :labels="d.days"
-          :series="[{ name: 'Lượt đặt lịch', color: '#7B391A', values: d.daily.map((x) => x.leads), type: 'bar' }]"
+          :series="[{ name: 'Click bản đồ', color: '#7B391A', values: d.daily.map((x) => x.mapClicks), type: 'bar' }]"
           :height="220"
-          aria-label="Biểu đồ cột khách đặt lịch theo ngày"
+          aria-label="Biểu đồ cột lượt click vào bản đồ theo ngày"
         />
       </section>
       <section class="bg-white border border-line rounded-2xl p-5">
-        <h3 class="font-semibold text-ink mb-1">Từ truy cập đến đặt lịch</h3>
-        <p class="text-xs text-ink/45 mb-5">Khách rơi rụng ở bước nào</p>
+        <h3 class="font-semibold text-ink mb-1">Khách tương tác với trang</h3>
+        <p class="text-xs text-ink/45 mb-5">Tỉ lệ khách thực hiện từng hành động</p>
         <ul class="space-y-3">
-          <li v-for="(f, i) in d.funnel" :key="f.name">
+          <li v-for="(f, i) in d.interactions" :key="f.name">
             <div class="flex justify-between text-sm mb-1">
               <span class="text-ink/70">{{ f.name }}</span>
-              <span class="font-semibold text-ink">{{ f.value.toLocaleString("vi-VN") }}</span>
+              <span class="font-semibold text-ink">{{ pct(f.rate) }}</span>
             </div>
             <div class="h-2.5 rounded-full bg-tan overflow-hidden">
-              <div class="h-full rounded-full" :style="{ width: (f.value / d.funnel[0].value) * 100 + '%', background: ['#EAD8C7', '#C97D3D', '#A6673C', '#7B391A'][i] }"></div>
+              <div class="h-full rounded-full" :style="{ width: Math.min(100, f.rate * 100 * 2.4) + '%', background: ['#C97D3D', '#7B391A', '#FFA400', '#EAD8C7'][i] }"></div>
             </div>
           </li>
         </ul>
-        <p class="text-xs text-ink/45 mt-4">Tỉ lệ chuyển đổi: <b class="text-clay-dark">{{ pct(d.totals.leads / d.totals.visits) }}</b></p>
       </section>
     </div>
 
@@ -97,33 +96,33 @@
             <tr class="text-left text-ink/50 border-b border-line">
               <th class="py-2 px-1 font-medium">Chiến dịch</th>
               <th class="py-2 px-1 font-medium text-right">Lượt truy cập</th>
-              <th class="py-2 px-1 font-medium text-right">Đặt lịch</th>
+              <th class="py-2 px-1 font-medium text-right">Click bản đồ</th>
               <th class="py-2 px-1 font-medium text-right">Tỉ lệ</th>
               <th class="py-2 px-1 font-medium text-right">Chi phí</th>
-              <th class="py-2 px-1 font-medium text-right">Chi phí / lịch</th>
+              <th class="py-2 px-1 font-medium text-right">Chi phí / lượt truy cập</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="c in d.campaigns" :key="c.name" class="border-b border-line/60 last:border-0">
               <td class="py-3 px-1"><p class="font-semibold text-ink">{{ c.label }}</p><p class="text-xs text-ink/40">{{ c.name }}</p></td>
               <td class="py-3 px-1 text-right">{{ c.visits }}</td>
-              <td class="py-3 px-1 text-right font-semibold text-clay-dark">{{ c.leads }}</td>
-              <td class="py-3 px-1 text-right">{{ pct(c.cvr) }}</td>
+              <td class="py-3 px-1 text-right font-semibold text-clay-dark">{{ c.mapClicks }}</td>
+              <td class="py-3 px-1 text-right">{{ pct(c.rate) }}</td>
               <td class="py-3 px-1 text-right">{{ money(c.spend) }}</td>
-              <td class="py-3 px-1 text-right font-semibold">{{ money(c.cpl) }}</td>
+              <td class="py-3 px-1 text-right font-semibold">{{ money(c.cpv) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- Khách gần đây -->
+    <!-- Khách click bản đồ gần đây -->
     <section class="bg-white border border-line rounded-2xl p-5 mt-4">
-      <h3 class="font-semibold text-ink mb-4">Khách đặt lịch gần đây <span class="text-xs font-normal text-ink/40">(đã che số điện thoại)</span></h3>
+      <h3 class="font-semibold text-ink mb-4">Khách click vào bản đồ gần đây</h3>
       <ul class="divide-y divide-line/60">
-        <li v-for="l in d.recentLeads" :key="l.time + l.name" class="py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
-          <div><p class="font-semibold text-ink text-sm">{{ l.name }}</p><p class="text-xs text-ink/45">{{ l.phone }} · {{ l.time }}</p></div>
-          <div class="text-right"><p class="text-sm text-ink/70">{{ l.service }}</p><p class="text-xs text-ink/40">Nguồn: {{ l.source }}</p></div>
+        <li v-for="l in d.recentMapClicks" :key="l.time + l.area" class="py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+          <div><p class="font-semibold text-ink text-sm">{{ l.area }}</p><p class="text-xs text-ink/45">{{ l.device }} · {{ l.time }}</p></div>
+          <p class="text-xs text-ink/40">Nguồn: {{ l.source }}</p>
         </li>
       </ul>
     </section>
@@ -142,14 +141,15 @@ const pct = (v) => `${(v * 100).toFixed(1).replace(".", ",")}%`;
 const money = (v) => `${v.toLocaleString("vi-VN")}đ`;
 const mmss = (s) => `${Math.floor(s / 60)}p ${String(s % 60).padStart(2, "0")}s`;
 
+const totalSpend = d.campaigns.reduce((s, c) => s + c.spend, 0);
 const kpis = computed(() => [
   { label: "Người truy cập", value: d.totals.visitors.toLocaleString("vi-VN"), delta: d.delta.visitors },
   { label: "Lượt xem trang", value: d.totals.views.toLocaleString("vi-VN"), delta: d.delta.views },
-  { label: "Khách đặt lịch", value: d.totals.leads.toLocaleString("vi-VN"), delta: d.delta.leads },
-  { label: "Tỉ lệ chuyển đổi", value: pct(d.totals.leads / d.totals.visits), note: "Đặt lịch / lượt truy cập" },
+  { label: "Tỉ lệ click vào bản đồ", value: pct(d.mapClickRate), delta: d.delta.mapClicks },
+  { label: "Tỉ lệ click đánh giá Google", value: pct(d.reviewClickRate), note: "Xem đánh giá 4,8★ trên Google" },
   { label: "Tỉ lệ thoát", value: pct(d.bounceRate), note: "Càng thấp càng tốt" },
   { label: "Thời gian trên trang", value: mmss(d.avgDurationSec), note: "Trung bình mỗi lượt" },
-  { label: "Chi phí quảng cáo", value: money(d.campaigns.reduce((s, c) => s + c.spend, 0)), note: "30 ngày gần nhất" },
-  { label: "Chi phí mỗi lịch", value: money(Math.round(d.campaigns.reduce((s, c) => s + c.spend, 0) / d.campaigns.reduce((s, c) => s + c.leads, 0))), note: "Chi phí / khách đặt lịch" },
+  { label: "Tỉ lệ bấm Zalo / Messenger", value: pct(d.zaloClickRate), note: "Khách chủ động nhắn tin" },
+  { label: "Chi phí quảng cáo", value: money(totalSpend), note: "30 ngày gần nhất" },
 ]);
 </script>

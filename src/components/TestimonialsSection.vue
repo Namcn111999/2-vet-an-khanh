@@ -8,7 +8,7 @@
     <div v-reveal="{ delay: 50 }" class="flex flex-wrap items-center gap-x-4 gap-y-2 -mt-6 mb-10">
       <span class="font-display text-3xl text-clay-dark" style="font-weight: 600">4,8</span>
       <span class="text-amber text-xl tracking-wider" aria-label="4,8 trên 5 sao">★★★★★</span>
-      <a :href="mapsUrl" target="_blank" rel="noopener" class="text-sm text-ink/60 underline underline-offset-4 hover:text-ink">44 đánh giá trên Google</a>
+      <a data-umami-event="click_danh_gia_google" :href="mapsUrl" target="_blank" rel="noopener" class="text-sm text-ink/60 underline underline-offset-4 hover:text-ink">44 đánh giá trên Google</a>
     </div>
 
     <div class="grid md:grid-cols-[auto_1fr] gap-8 md:gap-14 items-center" v-reveal="{ delay: 100 }">

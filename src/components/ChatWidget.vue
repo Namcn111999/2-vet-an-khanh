@@ -109,6 +109,7 @@ function handleAction(action) {
     emit("close");
   }
   if (action.external) {
+    if (action.external.includes("google.com/maps")) window.umami?.track("click_ban_do", { from: "chatbot" });
     window.open(action.external, "_blank", "noopener");
   }
 }
