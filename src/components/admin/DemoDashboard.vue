@@ -195,7 +195,7 @@
 import { ref, computed } from "vue";
 import TrendChart from "./TrendChart.vue";
 import DonutChart from "./DonutChart.vue";
-import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf, addDays, HISTORY_DAYS } from "../../data/demoStats";
+import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf, addDays } from "../../data/demoStats";
 
 const model = createModel();
 const modes = [
@@ -209,23 +209,23 @@ const anchor = ref(model.today);
 
 // Khoảng tùy chọn (mặc định 30 ngày gần nhất)
 const rangeEnd = ref(model.today);
-const rangeStart = ref(addDays(model.today, -29));
+const rangeStart = ref(model.first > addDays(model.today, -29) ? model.first : addDays(model.today, -29));
+const total = model.days.length;
 const presets = [
   { days: 7, label: "7 ngày" },
   { days: 14, label: "14 ngày" },
   { days: 30, label: "30 ngày" },
-  { days: 90, label: "90 ngày" },
-  { days: HISTORY_DAYS, label: "Tất cả" },
-];
+  { days: total, label: `Tất cả (từ ${String(model.first.getDate()).padStart(2, "0")}/${String(model.first.getMonth() + 1).padStart(2, "0")})` },
+].filter((p, i, arr) => p.days < total || i === arr.length - 1); // bỏ mốc dài hơn dữ liệu đang có
 const spanDays = computed(() => Math.round((rangeEnd.value - rangeStart.value) / 86400000) + 1);
 const activePreset = computed(() => {
   const isToday = rangeEnd.value.getTime() === model.today.getTime();
-  const p = presets.find((x) => x.days === spanDays.value || (x.days === HISTORY_DAYS && rangeStart.value.getTime() === model.first.getTime()));
+  const p = presets.find((x) => x.days === spanDays.value);
   return isToday && p ? p.days : null;
 });
 function applyPreset(n) {
   rangeEnd.value = model.today;
-  rangeStart.value = n >= HISTORY_DAYS ? model.first : addDays(model.today, -(n - 1));
+  rangeStart.value = n >= total ? model.first : addDays(model.today, -(n - 1));
 }
 function setRange(which, e) {
   if (!e.target.value) return;

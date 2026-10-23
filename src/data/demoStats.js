@@ -15,7 +15,11 @@ function rng(seed) {
   };
 }
 
-export const HISTORY_DAYS = 150;
+// Quảng cáo bắt đầu chạy từ 10/10/2026, nên dữ liệu mẫu cũng bắt đầu từ ngày này.
+// 24/10/2026 là ngày khớp đúng số liệu thật 24 giờ gần nhất (127 / 138 / 225).
+const FIRST_DAY = new Date(2026, 9, 10);
+const REAL_DAY = new Date(2026, 9, 24);
+const SPEND_TOTAL_TO_REAL_DAY = 1600000; // tổng chi phí quảng cáo từ 10/10 đến 24/10
 const TODAY_TOTALS = { visitors: 127, visits: 138, views: 225, mapClicks: 16 };
 const TODAY_HOURLY_VISITS = [5, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2, 10, 14, 18, 8, 15, 15, 5];
 const TODAY_HOURLY_VIEWS = [14, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
@@ -28,7 +32,7 @@ const SERVICE_GROUPS = [
   { label: "Tiêm phòng", campaign: "Campaign 3 · Retargeting", share: 0.32, spend: 0.23, rate: 0.116 },
   { label: "Spa & grooming", campaign: "Campaign 2 · Messages", share: 0.26, spend: 0.4, rate: 0.109 },
 ];
-const FB_SHARE = 0.62; // phần lượt truy cập đến từ Facebook Ads
+const FB_SHARE = 0.4; // phần lượt truy cập đến từ Facebook Ads (Google, Fanpage, Zalo… là các nguồn còn lại)
 const DAILY_AD_BUDGET = 150000; // ngân sách quảng cáo đang cài mỗi ngày
 
 export const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -71,19 +75,22 @@ function allocate(total, shares) {
 }
 
 export function createModel() {
-  const today = startOfDay(new Date());
+  let today = startOfDay(new Date());
+  if (today < REAL_DAY) today = REAL_DAY;
+  const n = Math.round((today - FIRST_DAY) / 86400000) + 1;
   const r = rng(7);
   const days = [];
-  for (let i = 0; i < HISTORY_DAYS; i++) {
-    const date = addDays(today, -(HISTORY_DAYS - 1 - i));
-    const isToday = i === HISTORY_DAYS - 1;
+  for (let i = 0; i < n; i++) {
+    const date = addDays(FIRST_DAY, i);
+    const isReal = keyOf(date) === keyOf(REAL_DAY);
     const weekend = date.getDay() === 0 || date.getDay() === 6 ? 1.15 : 1;
-    let visitors = Math.round((52 + 0.45 * i) * weekend * (0.82 + r() * 0.36));
+    // lượt truy cập tăng dần theo ngân sách quảng cáo trong 2 tuần đầu rồi đi ngang
+    let visitors = Math.round((62 + 4 * Math.min(i, 14)) * weekend * (0.87 + r() * 0.26));
     let visits = Math.round(visitors * (1.07 + r() * 0.03));
     let views = Math.round(visits * (1.58 + r() * 0.1));
     let mapClicks = Math.round(visits * (0.1 + r() * 0.045));
     let hv, hw, hm;
-    if (isToday) {
+    if (isReal) {
       ({ visitors, visits, views, mapClicks } = TODAY_TOTALS);
       hv = TODAY_HOURLY_VISITS;
       hw = TODAY_HOURLY_VIEWS;
@@ -95,11 +102,18 @@ export function createModel() {
     hm = distribute(mapClicks, HOUR_WEIGHTS, r);
     days.push({ date, key: keyOf(date), visitors, visits, views, mapClicks, hourlyVisits: hv, hourlyViews: hw, hourlyMap: hm });
   }
-  // Chi phí quảng cáo theo ngày tỉ lệ với lượt truy cập từ Facebook; 30 ngày gần nhất = 1.600.000đ
-  // Chi phí quảng cáo mỗi ngày quanh ngân sách đã cài (150.000đ/ngày), Facebook chi lệch nhẹ mỗi ngày
+
+  // Chi phí quảng cáo: ngân sách cài 150.000đ/ngày hiện tại (24/10). Những ngày đầu chi thấp hơn rồi tăng dần,
+  // tổng từ 10/10 đến 24/10 đúng bằng 1.600.000đ. Sau 24/10 chi quanh mức ngân sách.
+  const realIdx = days.findIndex((d) => d.key === keyOf(REAL_DAY));
+  const ramp = Array.from({ length: realIdx }, (_, i) => 63 + (87 * i) / realIdx);
+  const rampSpend = allocate(Math.round((SPEND_TOTAL_TO_REAL_DAY - DAILY_AD_BUDGET) / 1000), ramp).map((x) => x * 1000);
   const rs = rng(99);
-  days.forEach((d) => { d.spend = Math.round((DAILY_AD_BUDGET * (0.92 + rs() * 0.16)) / 1000) * 1000; });
-  days[days.length - 1].spend = DAILY_AD_BUDGET;
+  days.forEach((d, i) => {
+    if (i < realIdx) d.spend = rampSpend[i];
+    else if (i === realIdx) d.spend = DAILY_AD_BUDGET;
+    else d.spend = Math.round((DAILY_AD_BUDGET * (0.92 + rs() * 0.16)) / 1000) * 1000;
+  });
 
   const byKey = new Map(days.map((d) => [d.key, d]));
   return { today, first: days[0].date, days, byKey };
@@ -182,7 +196,7 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
   const hm = sumArr(days, "hourlyMap");
 
   // Nguồn truy cập: tổng các nguồn luôn bằng đúng tổng lượt truy cập của kỳ
-  const srcVals = allocate(cur.visits, [FB_SHARE, 0.14, 0.08, 0.09, 0.07]);
+  const srcVals = allocate(cur.visits, [FB_SHARE, 0.15, 0.09, 0.28, 0.08]);
   const sourceList = [
     { name: "Facebook Ads", color: "#FFA400" },
     { name: "Fanpage (tự nhiên)", color: "#7B391A" },
@@ -241,7 +255,7 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
     hourlyVisits: hv,
     hourlyViews: hw,
     mapClickRate: mapRate,
-    reviewClickRate: jit(0.31, 0.12), // khách rất hay bấm xem đánh giá Google trước khi quyết định (~30%)
+    reviewClickRate: jit(0.064, 0.1),
     zaloClickRate: jit(0.121, 0.1),
     bounceRate: jit(0.37, 0.1),
     avgDurationSec: Math.round(jit(105, 0.1)),
