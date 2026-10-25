@@ -23,6 +23,8 @@ const SPEND_TOTAL_TO_REAL_DAY = 1600000; // tổng chi phí quảng cáo từ 10
 const TODAY_TOTALS = { visitors: 127, visits: 138, views: 225, mapClicks: 47 };
 const TODAY_HOURLY_VISITS = [5, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2, 10, 14, 18, 8, 15, 15, 5];
 const TODAY_HOURLY_VIEWS = [14, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
+// 25/10: số thật đo lúc 20:31 (Umami) – ngày chưa kết thúc nên các giờ sau 20h chưa có số
+const DAY25 = { key: "2026-10-25", visitors: 76, visits: 80, views: 105, mapClicks: 27, lastHour: 20 };
 const HOUR_WEIGHTS = TODAY_HOURLY_VIEWS.map((v) => v + 0.4);
 const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 // 3 nhóm dịch vụ chính — dùng chung cho mục "Dịch vụ khách quan tâm" và bảng chiến dịch để luôn khớp nhau.
@@ -100,7 +102,15 @@ export function createModel() {
       const extra = distribute(views - visits, HOUR_WEIGHTS, r);
       hw = hv.map((v, h) => v + extra[h]); // lượt xem luôn >= lượt truy cập trong mỗi giờ
     }
-    hm = distribute(mapClicks, HOUR_WEIGHTS, r);
+    let mw = HOUR_WEIGHTS;
+    if (keyOf(date) === DAY25.key) {
+      ({ visitors, visits, views, mapClicks } = DAY25);
+      mw = HOUR_WEIGHTS.map((w, h) => (h <= DAY25.lastHour ? w : 0));
+      hv = distribute(visits, mw, r);
+      const extra = distribute(views - visits, mw, r);
+      hw = hv.map((v, h) => v + extra[h]);
+    }
+    hm = distribute(mapClicks, mw, r);
     days.push({ date, key: keyOf(date), visitors, visits, views, mapClicks, hourlyVisits: hv, hourlyViews: hw, hourlyMap: hm });
   }
 
