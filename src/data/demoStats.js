@@ -53,6 +53,7 @@ export const dmy = (d) => `${dm(d)}/${d.getFullYear()}`;
 function distribute(total, weights, r) {
   const w = weights.map((x) => x * (0.75 + r() * 0.5));
   const sum = w.reduce((s, x) => s + x, 0);
+  if (!sum) return w.map(() => 0);
   const raw = w.map((x) => (x / sum) * total);
   const out = raw.map(Math.floor);
   let rest = total - out.reduce((s, x) => s + x, 0);
@@ -110,8 +111,38 @@ export function createModel() {
       const extra = distribute(views - visits, mw, r);
       hw = hv.map((v, h) => v + extra[h]);
     }
+    // Ngày hôm nay (realtime): chỉ có số liệu từ 0h đến giờ hiện tại, các giờ sau chưa phát sinh
+    let partial = false;
+    let elapsed = 1;
+    const nowD = new Date();
+    if (!isReal && keyOf(date) !== DAY25.key && keyOf(date) === keyOf(nowD)) {
+      partial = true;
+      const nh = nowD.getHours();
+      elapsed = (nh + nowD.getMinutes() / 60) / 24;
+      mw = HOUR_WEIGHTS.map((w, h) => (h < nh ? w : h === nh ? w * (nowD.getMinutes() / 60) : 0));
+      const frac = mw.reduce((a, b) => a + b, 0) / HOUR_WEIGHTS.reduce((a, b) => a + b, 0);
+      visits = Math.round(visits * frac);
+      views = Math.max(visits, Math.round(views * frac));
+      visitors = Math.min(visits, Math.round(visitors * frac));
+      mapClicks = Math.round(visits * (0.31 + r() * 0.06));
+      hv = distribute(visits, mw, r);
+      const extra = distribute(views - visits, mw, r);
+      hw = hv.map((v, h) => v + extra[h]);
+    }
     hm = distribute(mapClicks, mw, r);
-    days.push({ date, key: keyOf(date), visitors, visits, views, mapClicks, hourlyVisits: hv, hourlyViews: hw, hourlyMap: hm });
+    // Đặc điểm riêng của từng ngày: nguồn, thiết bị, dịch vụ, tỉ lệ… khác nhau giữa các ngày
+    const ra = rng(Math.round(date.getTime() / 86400000) * 13 + 5);
+    const srcCounts = allocate(visits, [FB_SHARE * (0.92 + ra() * 0.16), 0.15 * (0.75 + ra() * 0.5), 0.09 * (0.7 + ra() * 0.6), 0.28 * (0.85 + ra() * 0.3), 0.08 * (0.7 + ra() * 0.6)]);
+    const mob = 0.77 + ra() * 0.1;
+    const tab = 0.01 + ra() * 0.03;
+    const devCounts = allocate(visits, [mob, 1 - mob - tab, tab]);
+    const svcVisits = allocate(srcCounts[0], SERVICE_GROUPS.map((g) => g.share * (0.82 + ra() * 0.36)));
+    const svcMap = SERVICE_GROUPS.map((g, k) => Math.round(svcVisits[k] * g.rate * (0.9 + ra() * 0.2)));
+    days.push({
+      date, key: keyOf(date), visitors, visits, views, mapClicks, hourlyVisits: hv, hourlyViews: hw, hourlyMap: hm,
+      partial, elapsed, srcCounts, devCounts, svcVisits, svcMap,
+      bounce: 0.33 + ra() * 0.08, duration: 92 + ra() * 28, reviewRate: 0.052 + ra() * 0.026, zaloRate: 0.13 + ra() * 0.05,
+    });
   }
 
   // Chi phí quảng cáo: ngân sách cài 150.000đ/ngày hiện tại (24/10). Những ngày đầu chi thấp hơn rồi tăng dần,
@@ -123,7 +154,9 @@ export function createModel() {
   days.forEach((d, i) => {
     if (i < realIdx) d.spend = rampSpend[i];
     else if (i === realIdx) d.spend = DAILY_AD_BUDGET;
-    else d.spend = Math.round((DAILY_AD_BUDGET * (0.92 + rs() * 0.16)) / 1000) * 1000;
+    else d.spend = Math.round((DAILY_AD_BUDGET * (0.92 + rs() * 0.16) * d.elapsed) / 1000) * 1000;
+    const sr = rng(i * 17 + 3);
+    d.svcSpend = allocate(Math.round(d.spend / 1000), SERVICE_GROUPS.map((g) => g.spend * (0.88 + sr() * 0.24))).map((x) => x * 1000);
   });
 
   const byKey = new Map(days.map((d) => [d.key, d]));
@@ -207,7 +240,9 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
   const hm = sumArr(days, "hourlyMap");
 
   // Nguồn truy cập: tổng các nguồn luôn bằng đúng tổng lượt truy cập của kỳ
-  const srcVals = allocate(cur.visits, [FB_SHARE, 0.15, 0.09, 0.28, 0.08]);
+  const srcVals = [0, 1, 2, 3, 4].map((k) => sum(days, (d) => d.srcCounts[k]));
+  const wavg = (f) => (cur.visits ? sum(days, (d) => f(d) * d.visits) / cur.visits : 0);
+  const devVals = [0, 1, 2].map((k) => sum(days, (d) => d.devCounts[k]));
   const sourceList = [
     { name: "Facebook Ads", color: "#FFA400" },
     { name: "Fanpage (tự nhiên)", color: "#7B391A" },
@@ -218,12 +253,13 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
 
   // Chiến dịch: lượt truy cập chia hết phần "Facebook Ads", chi phí chia hết tổng chi phí của kỳ
   const fbVisits = srcVals[0];
-  const visitsBy = allocate(fbVisits, SERVICE_GROUPS.map((g) => g.share));
-  const spendBy = allocate(Math.round(cur.spend / 1000), SERVICE_GROUPS.map((g) => g.spend)).map((x) => x * 1000);
+  const visitsBy = SERVICE_GROUPS.map((g, k) => sum(days, (d) => d.svcVisits[k]));
+  const spendBy = SERVICE_GROUPS.map((g, k) => sum(days, (d) => d.svcSpend[k]));
+  const mapBy = SERVICE_GROUPS.map((g, k) => sum(days, (d) => d.svcMap[k]));
   const campaigns = SERVICE_GROUPS.map((g, i) => {
     const visits = visitsBy[i];
     const spend = spendBy[i];
-    const mapClicks = Math.round(visits * g.rate);
+    const mapClicks = mapBy[i];
     return { name: g.campaign, label: g.label, visits, mapClicks, spend, rate: visits ? mapClicks / visits : 0, cpv: visits ? Math.round(spend / visits) : 0 };
   });
 
@@ -268,17 +304,20 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
     hourlyVisits: hv,
     hourlyViews: hw,
     mapClickRate: mapRate,
-    reviewClickRate: jit(0.064, 0.1),
-    zaloClickRate: jit(0.15, 0.1),
-    bounceRate: jit(0.37, 0.1),
-    avgDurationSec: Math.round(jit(105, 0.1)),
+    reviewClickRate: wavg((d) => d.reviewRate),
+    zaloClickRate: wavg((d) => d.zaloRate),
+    bounceRate: wavg((d) => d.bounce),
+    avgDurationSec: Math.round(wavg((d) => d.duration)),
     sources: sourceList,
     devices: [
-      { name: "Điện thoại", value: 0.84 },
-      { name: "Máy tính", value: 0.14 },
-      { name: "Máy tính bảng", value: 0.02 },
+      { name: "Điện thoại", value: cur.visits ? devVals[0] / cur.visits : 0 },
+      { name: "Máy tính", value: cur.visits ? devVals[1] / cur.visits : 0 },
+      { name: "Máy tính bảng", value: cur.visits ? devVals[2] / cur.visits : 0 },
     ],
-    services: SERVICE_GROUPS.map((g) => ({ name: g.label, value: Math.round(g.share * 100) })),
+    services: (() => {
+      const pc = allocate(100, visitsBy.map((v) => v || 0.0001));
+      return SERVICE_GROUPS.map((g, i) => ({ name: g.label, value: pc[i] }));
+    })(),
     campaigns,
     recentMapClicks: recent,
   };

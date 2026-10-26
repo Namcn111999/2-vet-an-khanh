@@ -217,13 +217,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, shallowRef, computed, onMounted, onBeforeUnmount } from "vue";
 import { exportExcel, exportPdf } from "./exportReport";
 import TrendChart from "./TrendChart.vue";
 import DonutChart from "./DonutChart.vue";
 import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf, addDays } from "../../data/demoStats";
 
 const model = createModel();
+// Realtime: dựng lại số liệu mỗi phút để ngày hôm nay chạy theo giờ hiện tại
+const live = shallowRef(model);
 const modes = [
   { id: "day", label: "Ngày" },
   { id: "week", label: "Tuần" },
@@ -261,7 +263,7 @@ function setRange(which, e) {
   else { rangeEnd.value = v; if (v < rangeStart.value) rangeStart.value = v; }
 }
 
-const d = computed(() => computePeriod(model, mode.value, anchor.value, { start: rangeStart.value, end: rangeEnd.value }));
+const d = computed(() => computePeriod(live.value, mode.value, anchor.value, { start: rangeStart.value, end: rangeEnd.value }));
 const label = computed(() => periodLabel(mode.value, d.value.anchor, d.value.range));
 const prevText = computed(() => ({ day: "hôm trước", week: "tuần trước", month: "tháng trước", range: "kỳ trước (cùng số ngày)" }[mode.value]));
 
@@ -293,9 +295,15 @@ const exportOpen = ref(false);
 const exporting = ref(false);
 const exportEl = ref(null);
 const reportEl = ref(null);
-const nowText = new Date().toLocaleString("vi-VN");
+const nowText = ref(new Date().toLocaleString("vi-VN"));
+let liveTimer = null;
+function refreshLive() {
+  live.value = createModel();
+  nowText.value = new Date().toLocaleString("vi-VN");
+}
 async function doExcel() {
   exportOpen.value = false;
+  refreshLive();
   exporting.value = true;
   try {
     await exportExcel(d.value, label.value);
@@ -305,6 +313,7 @@ async function doExcel() {
 }
 async function doPdf() {
   exportOpen.value = false;
+  refreshLive();
   exporting.value = true;
   try {
     await new Promise((r) => setTimeout(r, 50));
@@ -316,8 +325,17 @@ async function doPdf() {
 function closeOnOutside(e) {
   if (exportEl.value && !exportEl.value.contains(e.target)) exportOpen.value = false;
 }
-onMounted(() => document.addEventListener("click", closeOnOutside));
-onBeforeUnmount(() => document.removeEventListener("click", closeOnOutside));
+onMounted(() => {
+  document.addEventListener("click", closeOnOutside);
+  liveTimer = setInterval(() => {
+    live.value = createModel();
+    nowText.value = new Date().toLocaleString("vi-VN");
+  }, 60000);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("click", closeOnOutside);
+  clearInterval(liveTimer);
+});
 
 const hours = Array.from({ length: 24 }, (_, h) => `${h}h`);
 const pct = (v) => `${(v * 100).toFixed(1).replace(".", ",")}%`;
