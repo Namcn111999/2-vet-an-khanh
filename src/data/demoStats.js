@@ -25,6 +25,12 @@ const TODAY_HOURLY_VISITS = [5, 1, 0, 0, 1, 0, 0, 0, 4, 3, 4, 1, 6, 8, 12, 6, 2,
 const TODAY_HOURLY_VIEWS = [14, 1, 0, 0, 1, 0, 0, 0, 4, 4, 7, 1, 9, 13, 24, 11, 4, 16, 18, 25, 20, 30, 18, 5];
 // 25/10: số thật đo lúc 20:31 (Umami) – ngày chưa kết thúc nên các giờ sau 20h chưa có số
 const DAY25 = { key: "2026-10-25", visitors: 76, visits: 80, views: 105, mapClicks: 27, lastHour: 20 };
+// 27/10: số thật Umami "24 giờ gần nhất" (chụp 12:21 ngày 28/10) – xếp theo giờ trong ngày
+const DAY27 = {
+  key: "2026-10-27", visitors: 107, visits: 111, views: 135, mapClicks: 38,
+  hv: [2, 1, 1, 1, 5, 1, 5, 5, 6, 11, 9, 7, 7, 3, 3, 11, 6, 1, 4, 5, 6, 2, 7, 2],
+  hw: [2, 1, 1, 1, 6, 2, 7, 7, 8, 16, 11, 7, 9, 3, 3, 13, 7, 1, 4, 5, 6, 2, 11, 2],
+};
 const HOUR_WEIGHTS = TODAY_HOURLY_VIEWS.map((v) => v + 0.4);
 const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 // 3 nhóm dịch vụ chính — dùng chung cho mục "Dịch vụ khách quan tâm" và bảng chiến dịch để luôn khớp nhau.
@@ -128,6 +134,11 @@ export function createModel() {
       hv = distribute(visits, mw, r);
       const extra = distribute(views - visits, mw, r);
       hw = hv.map((v, h) => v + extra[h]);
+    }
+    if (keyOf(date) === DAY27.key) {
+      ({ visitors, visits, views, mapClicks } = DAY27);
+      hv = DAY27.hv;
+      hw = DAY27.hw;
     }
     hm = distribute(mapClicks, mw, r);
     // Đặc điểm riêng của từng ngày: nguồn, thiết bị, dịch vụ, tỉ lệ… khác nhau giữa các ngày
