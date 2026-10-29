@@ -198,6 +198,7 @@ export function createModel() {
     }
     if (keyOf(date) === DAY30.key) {
       ({ visitors, visits, views, mapClicks } = DAY30);
+      mw = HOUR_WEIGHTS.map((w, h) => (h < 2 ? w : 0));
       hv = Array.from({ length: 24 }, (_, h) => (h < 2 ? 1 : 0));
       hw = hv;
     }
@@ -340,8 +341,7 @@ export function computePeriod(model, mode, anchorIn, rangeIn) {
   const areas = ["Hoài Đức, Hà Nội", "Hoài Đức, Hà Nội", "Nam Từ Liêm, Hà Nội", "Hà Đông, Hà Nội", "Thanh Xuân, Hà Nội"];
   const svcs = SERVICE_GROUPS.map((g) => g.label);
   const when = (dt) => {
-    const diff = Math.round((model.today - dt) / 86400000);
-    return diff === 0 ? "Hôm nay" : diff === 1 ? "Hôm qua" : dm(dt);
+    return dm(dt);
   };
   const recent = [];
   const rr = rng(days.length ? Math.round(days[0].date.getTime() / 86400000) + 5 : 5);

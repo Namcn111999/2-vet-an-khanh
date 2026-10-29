@@ -1,5 +1,6 @@
 <template>
   <AdminDashboard v-if="isAdmin" />
+  <ReportPage v-else-if="isReport" />
   <template v-else>
     <TheHeader />
     <main>
@@ -38,7 +39,10 @@ import TheFooter from "./components/TheFooter.vue";
 import FloatingContact from "./components/FloatingContact.vue";
 import PromoPopup from "./components/PromoPopup.vue";
 import AdminDashboard from "./components/AdminDashboard.vue";
+import ReportPage from "./components/ReportPage.vue";
 
 // Route đơn giản không cần thư viện: /admin -> trang quản trị, còn lại -> trang chính.
-const isAdmin = window.location.pathname.replace(/\/$/, "") === "/admin";
+const path = window.location.pathname.replace(/\/$/, "");
+const isAdmin = path === "/admin";
+const isReport = path === "/bao-cao";
 </script>

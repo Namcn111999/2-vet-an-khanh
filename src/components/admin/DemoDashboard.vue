@@ -2,13 +2,13 @@
   <div ref="reportEl">
     <!-- Chọn kỳ xem: Ngày / Tuần / Tháng, lùi-tiến kỳ và chọn ngày cụ thể -->
     <!-- Tiêu đề chỉ hiện khi in / lưu PDF -->
-    <div class="hidden print:block mb-6" data-pdf-only>
+    <div :class="fixed ? 'mb-6' : 'hidden print:block mb-6'" data-pdf-only>
       <h2 class="font-display text-2xl text-clay-dark" style="font-weight: 600">Báo cáo hoạt động landing page – 2Vet An Khánh</h2>
-      <p class="text-sm text-ink/60 mt-1">Kỳ báo cáo: {{ label }} ({{ d.rows.length }} ngày) · Xuất lúc {{ nowText }}</p>
+      <p class="text-sm text-ink/60 mt-1">Kỳ báo cáo: {{ label }} ({{ d.rows.length }} ngày){{ fixed && fixed.note ? " · " + fixed.note : "" }}<span :class="fixed ? 'hidden print:inline' : ''"> · Xuất lúc {{ nowText }}</span></p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3 mb-6 print:hidden" data-pdf-ignore>
-      <div class="inline-flex rounded-full border border-line bg-white p-1 text-sm" role="tablist" aria-label="Khoảng thời gian">
+      <div v-if="!fixed" class="inline-flex rounded-full border border-line bg-white p-1 text-sm" role="tablist" aria-label="Khoảng thời gian">
         <button
           v-for="m in modes" :key="m.id" role="tab" :aria-selected="mode === m.id" @click="mode = m.id"
           class="px-4 py-1.5 rounded-full transition-colors"
@@ -32,7 +32,7 @@
       <button v-if="mode !== 'range' && !isCurrent" @click="anchor = model.today" class="text-sm text-clay-dark hover:text-clay font-medium">Về hôm nay</button>
 
       <!-- Khoảng thời gian tùy chọn: từ ngày – đến ngày, kèm mốc chọn nhanh -->
-      <template v-if="mode === 'range'">
+      <template v-if="mode === 'range' && !fixed">
         <label class="inline-flex items-center gap-2 text-sm text-ink/60">
           Từ
           <input type="date" :value="toInput(rangeStart)" :min="minInput" :max="maxInput" @change="setRange('start', $event)"
@@ -89,7 +89,7 @@
     <div class="grid lg:grid-cols-3 gap-4 mt-4">
       <section class="lg:col-span-2 bg-white border border-line rounded-2xl p-5">
         <h3 class="font-semibold text-ink mb-1">Lượt truy cập theo ngày</h3>
-        <p class="text-xs text-ink/45 mb-3">Người truy cập và lượt xem trang · {{ d.trendTitle }}</p>
+        <p class="text-xs text-ink/45 mb-3">Người truy cập và lượt xem trang · {{ d.trendTitle }}{{ fixed && fixed.partial ? " · " + fixed.partial : "" }}</p>
         <TrendChart
           :labels="d.trend.labels"
           :series="[
@@ -109,7 +109,7 @@
     <div class="grid lg:grid-cols-3 gap-4 mt-4">
       <section class="lg:col-span-2 bg-white border border-line rounded-2xl p-5">
         <h3 class="font-semibold text-ink mb-1">Lượt click vào bản đồ theo {{ d.mapSeries.unit }}</h3>
-        <p class="text-xs text-ink/45 mb-3">Khách bấm xem đường đi tới phòng khám</p>
+        <p class="text-xs text-ink/45 mb-3">Khách bấm xem đường đi tới phòng khám{{ fixed && fixed.partial ? " · " + fixed.partial : "" }}</p>
         <TrendChart
           :labels="d.mapSeries.labels"
           :series="[{ name: 'Click bản đồ', color: '#7B391A', values: d.mapSeries.values, type: 'bar' }]"
@@ -202,6 +202,44 @@
       </div>
     </section>
 
+    <!-- Chi phí cộng dồn và tổng hợp theo tuần (kỳ dài hơn 1 tuần) -->
+    <div v-if="d.rows.length > 7" class="grid lg:grid-cols-2 gap-4 mt-4">
+      <section class="bg-white border border-line rounded-2xl p-5">
+        <h3 class="font-semibold text-ink mb-1">Chi phí quảng cáo cộng dồn</h3>
+        <p class="text-xs text-ink/45 mb-3">{{ label }} · tổng {{ money(d.totals.spend) }} · đơn vị: nghìn đồng</p>
+        <TrendChart
+          :labels="d.rows.map((r) => dmShort(r.date))"
+          :series="[{ name: 'Chi phí cộng dồn (nghìn đồng)', color: '#7B391A', values: cumSpend.map((v) => Math.round(v / 1000)), type: 'line', fill: true }]"
+          :height="220"
+          aria-label="Biểu đồ chi phí quảng cáo cộng dồn"
+        />
+      </section>
+      <section class="bg-white border border-line rounded-2xl p-5">
+        <h3 class="font-semibold text-ink mb-1">Tổng hợp theo tuần</h3>
+        <p class="text-xs text-ink/45 mb-3">Tuần tính từ thứ Hai, tuần đầu và tuần cuối có thể không đủ 7 ngày</p>
+        <div class="overflow-x-auto -mx-1">
+          <table class="w-full text-sm min-w-[420px] print:min-w-0 print:text-xs">
+            <thead>
+              <tr class="text-left text-ink/50 border-b border-line">
+                <th class="py-2 px-1 font-medium">Tuần</th>
+                <th class="py-2 px-1 font-medium text-right">Lượt truy cập</th>
+                <th class="py-2 px-1 font-medium text-right">Click bản đồ</th>
+                <th class="py-2 px-1 font-medium text-right">Chi phí</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="w in weekRows" :key="w.label" class="border-b border-line/60 last:border-0">
+                <td class="py-2.5 px-1"><p class="font-semibold text-ink">{{ w.label }}</p><p class="text-xs text-ink/40">{{ w.range }}</p></td>
+                <td class="py-2.5 px-1 text-right">{{ w.visits.toLocaleString("vi-VN") }}</td>
+                <td class="py-2.5 px-1 text-right font-semibold text-clay-dark">{{ w.mapClicks.toLocaleString("vi-VN") }}</td>
+                <td class="py-2.5 px-1 text-right">{{ money(w.spend) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
     <!-- Khách click bản đồ gần đây -->
     <section class="bg-white border border-line rounded-2xl p-5 mt-4">
       <h3 class="font-semibold text-ink mb-4">Khách click vào bản đồ gần đây <span class="text-xs font-normal text-ink/40">· {{ label }}</span></h3>
@@ -223,6 +261,7 @@ import TrendChart from "./TrendChart.vue";
 import DonutChart from "./DonutChart.vue";
 import { createModel, computePeriod, periodRange, periodLabel, shiftAnchor, keyOf, addDays } from "../../data/demoStats";
 
+const props = defineProps({ fixed: { type: Object, default: null } }); // {end: Date, note?: string} – khóa kỳ báo cáo từ ngày đầu đến end
 const model = createModel();
 // Realtime: dựng lại số liệu mỗi phút để ngày hôm nay chạy theo giờ hiện tại
 const live = shallowRef(model);
@@ -232,12 +271,12 @@ const modes = [
   { id: "month", label: "Tháng" },
   { id: "range", label: "Tùy chọn" },
 ];
-const mode = ref("day");
+const mode = ref(props.fixed ? "range" : "day");
 const anchor = ref(model.today);
 
 // Khoảng tùy chọn (mặc định 30 ngày gần nhất)
-const rangeEnd = ref(model.today);
-const rangeStart = ref(model.first > addDays(model.today, -29) ? model.first : addDays(model.today, -29));
+const rangeEnd = ref(props.fixed ? props.fixed.end : model.today);
+const rangeStart = ref(props.fixed ? model.first : model.first > addDays(model.today, -29) ? model.first : addDays(model.today, -29));
 const total = model.days.length;
 const presets = [
   { days: 7, label: "7 ngày" },
@@ -337,6 +376,19 @@ onBeforeUnmount(() => {
   clearInterval(liveTimer);
 });
 
+const dmShort = (dt) => `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}`;
+const cumSpend = computed(() => { let a = 0; return d.value.rows.map((r) => (a += r.spend)); });
+const weekRows = computed(() => {
+  const out = [];
+  let lastMon = "";
+  for (const r of d.value.rows) {
+    const mon = keyOf(addDays(r.date, -((r.date.getDay() + 6) % 7)));
+    if (mon !== lastMon) { out.push({ label: `Tuần ${out.length + 1}`, from: r.date, to: r.date, visits: 0, mapClicks: 0, spend: 0 }); lastMon = mon; }
+    const w = out[out.length - 1];
+    w.to = r.date; w.visits += r.visits; w.mapClicks += r.mapClicks; w.spend += r.spend;
+  }
+  return out.map((w) => ({ ...w, range: w.from.getTime() === w.to.getTime() ? dmShort(w.from) : `${dmShort(w.from)} – ${dmShort(w.to)}` }));
+});
 const hours = Array.from({ length: 24 }, (_, h) => `${h}h`);
 const pct = (v) => `${(v * 100).toFixed(1).replace(".", ",")}%`;
 const money = (v) => `${v.toLocaleString("vi-VN")}đ`;
