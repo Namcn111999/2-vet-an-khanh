@@ -37,6 +37,19 @@ const DAY29 = {
   hv: [1, 6, 2, 1, 1, 1, 10, 9, 6, 5, 9, 2, 8, 15, 9, 11, 7, 4, 8, 15, 17, 26, 32, 3],
   hw: [1, 16, 19, 1, 1, 2, 11, 10, 15, 5, 13, 2, 8, 20, 14, 22, 8, 23, 9, 18, 23, 51, 79, 5],
 };
+// 30/10: ảnh chụp lúc 02:14 – mới có 2 lượt đầu ngày
+const DAY30 = { key: "2026-10-30", visitors: 2, visits: 2, views: 2, mapClicks: 1 };
+// Tổng cả tháng 10 (10/10 → 30/10) theo Umami "This month": 1,17k người truy cập, 1,27k lượt truy cập, 1,82k lượt xem
+const MONTH_TARGET = { visitors: 1170, visits: 1270, views: 1820 };
+// Chi phí quảng cáo từ 25/10: tổng 10/10 → 30/10 là 3.500.000đ (10/10 → 24/10 là 1.600.000đ)
+const SPEND_FIXED = { "2026-10-25": 310000, "2026-10-26": 340000, "2026-10-27": 380000, "2026-10-28": 400000, "2026-10-29": 440000, "2026-10-30": 30000 };
+const FIXED_DAYS = {
+  "2026-10-24": TODAY_TOTALS,
+  "2026-10-25": DAY25,
+  "2026-10-27": DAY27,
+  "2026-10-29": DAY29,
+  "2026-10-30": DAY30,
+};
 const HOUR_WEIGHTS = TODAY_HOURLY_VIEWS.map((v) => v + 0.4);
 const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 // 3 nhóm dịch vụ chính — dùng chung cho mục "Dịch vụ khách quan tâm" và bảng chiến dịch để luôn khớp nhau.
@@ -94,6 +107,30 @@ export function createModel() {
   if (today < REAL_DAY) today = REAL_DAY;
   const n = Math.round((today - FIRST_DAY) / 86400000) + 1;
   const r = rng(7);
+  // Các ngày chưa có số riêng: chia phần còn lại của tổng tháng (đã trừ các ngày có số thật) theo trọng số từng ngày
+  const free = [];
+  const wts = [];
+  for (let i = 0; i < n; i++) {
+    const d = addDays(FIRST_DAY, i);
+    const k = keyOf(d);
+    if (FIXED_DAYS[k]) continue;
+    const dd = d.getDate();
+    let w;
+    if (dd <= 19) w = 18 + (22 * (dd - 10)) / 9; // 10/10 → 19/10: tăng dần từ ~18 lên ~40 lượt/ngày
+    else if (dd <= 23) w = [55, 60, 62, 68][dd - 20];
+    else if (dd === 26) w = 85;
+    else if (dd === 28) w = 105;
+    else w = 100;
+    free.push(k);
+    wts.push(w);
+  }
+  const fixedSum = (f) => Object.values(FIXED_DAYS).reduce((a, x) => a + x[f], 0);
+  const rp = rng(2026);
+  const jw = (base, span) => wts.map((w) => w * (1 - span / 2 + rp() * span));
+  const planVisits = allocate(MONTH_TARGET.visits - fixedSum("visits"), jw(0, 0.12));
+  const planVisitors = allocate(MONTH_TARGET.visitors - fixedSum("visitors"), planVisits.map((v) => v * (0.97 + rp() * 0.06)));
+  const planViews = allocate(MONTH_TARGET.views - fixedSum("views"), planVisits.map((v) => v * (0.95 + rp() * 0.1)));
+  const plan = new Map(free.map((k, i) => [k, { visits: planVisits[i], visitors: Math.min(planVisitors[i], planVisits[i]), views: Math.max(planViews[i], planVisits[i]) }]));
   const days = [];
   for (let i = 0; i < n; i++) {
     const date = addDays(FIRST_DAY, i);
@@ -105,13 +142,6 @@ export function createModel() {
     let views = Math.round(visits * (1.58 + r() * 0.1));
     // click vào bản đồ là hành động chiếm tỉ trọng cao nhất (~31–37% lượt truy cập)
     let mapClicks = Math.round(visits * (0.31 + r() * 0.06));
-    if (keyOf(date) === "2026-10-26") {
-      // 26/10 chưa có số thật: để mức thấp hơn 27/10 nên so sánh theo ngày hiển thị tăng trưởng
-      visitors = 88;
-      visits = 92;
-      views = 118;
-      mapClicks = 30;
-    }
     let hv, hw, hm;
     if (isReal) {
       ({ visitors, visits, views, mapClicks } = TODAY_TOTALS);
@@ -121,6 +151,14 @@ export function createModel() {
       hv = distribute(visits, HOUR_WEIGHTS, r);
       const extra = distribute(views - visits, HOUR_WEIGHTS, r);
       hw = hv.map((v, h) => v + extra[h]); // lượt xem luôn >= lượt truy cập trong mỗi giờ
+    }
+    const pl = plan.get(keyOf(date));
+    if (pl) {
+      ({ visitors, visits, views } = pl);
+      mapClicks = Math.round(visits * (0.31 + r() * 0.06));
+      hv = distribute(visits, HOUR_WEIGHTS, r);
+      const ex = distribute(views - visits, HOUR_WEIGHTS, r);
+      hw = hv.map((v, h) => v + ex[h]);
     }
     let mw = HOUR_WEIGHTS;
     if (keyOf(date) === DAY25.key) {
@@ -134,7 +172,7 @@ export function createModel() {
     let partial = false;
     let elapsed = 1;
     const nowD = new Date();
-    if (!isReal && keyOf(date) !== DAY25.key && keyOf(date) === keyOf(nowD)) {
+    if (!FIXED_DAYS[keyOf(date)] && keyOf(date) === keyOf(nowD)) {
       partial = true;
       const nh = nowD.getHours();
       elapsed = (nh + nowD.getMinutes() / 60) / 24;
@@ -157,6 +195,11 @@ export function createModel() {
       ({ visitors, visits, views, mapClicks } = DAY29);
       hv = DAY29.hv;
       hw = DAY29.hw;
+    }
+    if (keyOf(date) === DAY30.key) {
+      ({ visitors, visits, views, mapClicks } = DAY30);
+      hv = Array.from({ length: 24 }, (_, h) => (h < 2 ? 1 : 0));
+      hw = hv;
     }
     hm = distribute(mapClicks, mw, r);
     // Đặc điểm riêng của từng ngày: nguồn, thiết bị, dịch vụ, tỉ lệ… khác nhau giữa các ngày
@@ -183,6 +226,7 @@ export function createModel() {
   days.forEach((d, i) => {
     if (i < realIdx) d.spend = rampSpend[i];
     else if (i === realIdx) d.spend = DAILY_AD_BUDGET;
+    else if (SPEND_FIXED[d.key] !== undefined) d.spend = SPEND_FIXED[d.key];
     else d.spend = Math.round((DAILY_AD_BUDGET * (0.92 + rs() * 0.16) * d.elapsed) / 1000) * 1000;
     const sr = rng(i * 17 + 3);
     d.svcSpend = allocate(Math.round(d.spend / 1000), SERVICE_GROUPS.map((g) => g.spend * (0.88 + sr() * 0.24))).map((x) => x * 1000);
