@@ -31,6 +31,12 @@ const DAY27 = {
   hv: [2, 1, 1, 1, 5, 1, 5, 5, 6, 11, 9, 7, 7, 3, 3, 11, 6, 1, 4, 5, 6, 2, 7, 2],
   hw: [2, 1, 1, 1, 6, 2, 7, 7, 8, 16, 11, 7, 9, 3, 3, 13, 7, 1, 4, 5, 6, 2, 11, 2],
 };
+// 29/10: số thật Umami "24 giờ gần nhất" (chụp 01:57 ngày 30/10) – xếp theo giờ trong ngày
+const DAY29 = {
+  key: "2026-10-29", visitors: 195, visits: 208, views: 376, mapClicks: 71,
+  hv: [1, 6, 2, 1, 1, 1, 10, 9, 6, 5, 9, 2, 8, 15, 9, 11, 7, 4, 8, 15, 17, 26, 32, 3],
+  hw: [1, 16, 19, 1, 1, 2, 11, 10, 15, 5, 13, 2, 8, 20, 14, 22, 8, 23, 9, 18, 23, 51, 79, 5],
+};
 const HOUR_WEIGHTS = TODAY_HOURLY_VIEWS.map((v) => v + 0.4);
 const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 // 3 nhóm dịch vụ chính — dùng chung cho mục "Dịch vụ khách quan tâm" và bảng chiến dịch để luôn khớp nhau.
@@ -146,6 +152,11 @@ export function createModel() {
       ({ visitors, visits, views, mapClicks } = DAY27);
       hv = DAY27.hv;
       hw = DAY27.hw;
+    }
+    if (keyOf(date) === DAY29.key) {
+      ({ visitors, visits, views, mapClicks } = DAY29);
+      hv = DAY29.hv;
+      hw = DAY29.hw;
     }
     hm = distribute(mapClicks, mw, r);
     // Đặc điểm riêng của từng ngày: nguồn, thiết bị, dịch vụ, tỉ lệ… khác nhau giữa các ngày
